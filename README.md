@@ -174,6 +174,6 @@ Contributions are welcome\! Please follow these steps:
 
 ## 📄 License
 
-Distributed under the MIT License. See `[LICENSE](https://github.com/Dharm3112/IntelliCircle/blob/main/LICENSE) for more information.
+Distributed under the MIT License. See [LICENSE](https://github.com/Dharm3112/IntelliCircle/blob/main/LICENSE) for more information.
 
 *Created by [Dharm Patel](https://github.com/Dharm3112) & [Pushti Kadia](https://github.com/pushtikadia)*
