@@ -118,3 +118,10 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Debugging
 *.heapsnapshot
 *.cpuprofile
+
+# Required Documents 
+Tech Stack.md
+Problem Statement.md
+Design Doc.md
+PRD.md
+TODO.md
