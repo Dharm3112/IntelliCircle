@@ -1,9 +1,12 @@
 # Dependency directories
 node_modules/
 jspm_packages/
+.pnp
+.pnp.js
 
 # Build outputs
 dist/
+dist-ssr/
 build/
 server/public/
 .ext/
@@ -16,8 +19,7 @@ server/public/
 .env.test.local
 .env.production.local
 
-# Drizzle & Database
-# While migrations are usually tracked, local snapshots or logs should not be
+# Database
 drizzle/
 migrations/meta/
 *.db
@@ -34,16 +36,44 @@ generated-icon.png
 .render/
 .vercel/
 
-# Logs
+# Logs & Caches
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.npm/
+.eslintcache
+.prettiercache
+.vite/
 
 # OS metadata
 .DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
 Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Executables
 *.exe
 *.dll
 *.so
@@ -63,6 +93,7 @@ coverage/
 
 # Temporary files and archives
 *.tar.gz
+*.tgz
 *.zip
 *.log
 tmp/
@@ -70,3 +101,20 @@ temp/
 
 # TypeScript specific
 *.tsbuildinfo
+
+# Python Virtual Environments (if opened via PyCharm/JetBrains)
+venv/
+.venv/
+env/
+.env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Debugging
+*.heapsnapshot
+*.cpuprofile
