@@ -1,4 +1,4 @@
-import Fastify from "fastify";
+import Fastify, { FastifyError } from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
@@ -28,7 +28,7 @@ export const buildApp = async () => {
     app.register(healthRoutes, { prefix: "/api" });
 
     // --- Global Error Handler ---
-    app.setErrorHandler((error, request, reply) => {
+    app.setErrorHandler((error: FastifyError, request, reply) => {
         app.log.error(error);
         const statusCode = error.statusCode || 500;
         const message = env.NODE_ENV === "production" && statusCode === 500 ? "Internal Server Error" : error.message;

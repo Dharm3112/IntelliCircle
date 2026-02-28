@@ -64,14 +64,15 @@ export const participants = pgTable(
     }
 );
 
-// Zod schemas for validating API input
-export const insertWaitlistSchema = createInsertSchema(waitlist).pick({
-    email: true,
-    fullName: true,
-    interests: true,
-    location: true,
-    profession: true,
+// Waitlist Schemas
+export const insertWaitlistSchema = z.object({
+    email: z.string().email(),
+    name: z.string().optional(),
+    profession: z.string().optional()
 });
 
-export type InsertWaitlist = z.infer<typeof insertWaitlistSchema>;
-export type Waitlist = typeof waitlist.$inferSelect;
+export const selectWaitlistSchema = insertWaitlistSchema.extend({
+    id: z.number(),
+    status: z.enum(["pending", "approved", "rejected"]),
+    joinedAt: z.date()
+});
