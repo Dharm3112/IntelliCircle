@@ -9,5 +9,7 @@ export {
     selectWaitlistSchema,
     anonymousAuthSchema,
     upgradeAuthSchema,
-    loginAuthSchema
+    loginAuthSchema,
+    createRoomSchema,
+    nearbyRoomsQuerySchema
 } from "./schema";

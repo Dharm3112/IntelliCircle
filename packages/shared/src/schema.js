@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loginAuthSchema = exports.upgradeAuthSchema = exports.anonymousAuthSchema = exports.selectWaitlistSchema = exports.insertWaitlistSchema = exports.participants = exports.messages = exports.chatRooms = exports.users = exports.waitlist = void 0;
+exports.nearbyRoomsQuerySchema = exports.createRoomSchema = exports.authAuditLogs = exports.loginAuthSchema = exports.upgradeAuthSchema = exports.anonymousAuthSchema = exports.selectWaitlistSchema = exports.insertWaitlistSchema = exports.participants = exports.messages = exports.chatRooms = exports.users = exports.waitlist = void 0;
 const pg_core_1 = require("drizzle-orm/pg-core");
 const zod_1 = require("zod");
 // --- Waitlist Table ---
@@ -81,9 +81,38 @@ exports.anonymousAuthSchema = zod_1.z.object({
 });
 exports.upgradeAuthSchema = zod_1.z.object({
     email: zod_1.z.string().email(),
-    password: zod_1.z.string().min(8, "Password must be at least 8 characters long"),
+    password: zod_1.z.string()
+        .min(8, "Password must be at least 8 characters long")
+        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+        .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+        .regex(/[0-9]/, "Password must contain at least one number")
+        .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
 });
 exports.loginAuthSchema = zod_1.z.object({
     usernameOrEmail: zod_1.z.string(),
-    password: zod_1.z.string(),
+    password: zod_1.z.string(), // Keep login schema simple to not leak requirements to attackers
+});
+// --- Audit Logs ---
+exports.authAuditLogs = (0, pg_core_1.pgTable)("auth_audit_logs", {
+    id: (0, pg_core_1.serial)("id").primaryKey(),
+    ipAddress: (0, pg_core_1.varchar)("ip_address", { length: 45 }), // 45 chars handles IPv6
+    eventType: (0, pg_core_1.varchar)("event_type", { length: 50 }).notNull(), // 'login_failed', 'signup_failed', etc.
+    usernameOrEmailAttempted: (0, pg_core_1.varchar)("attempted_identity", { length: 256 }),
+    userAgent: (0, pg_core_1.text)("user_agent"),
+    createdAt: (0, pg_core_1.timestamp)("created_at").notNull().defaultNow(),
+});
+// --- Geolocation & Rooms Schemas ---
+exports.createRoomSchema = zod_1.z.object({
+    name: zod_1.z.string().min(3).max(64),
+    description: zod_1.z.string().max(500).optional(),
+    lat: zod_1.z.number().min(-90).max(90, "Latitude must be between -90 and 90"),
+    lng: zod_1.z.number().min(-180).max(180, "Longitude must be between -180 and 180"),
+    interests: zod_1.z.array(zod_1.z.string().max(50)).min(1).max(5)
+});
+exports.nearbyRoomsQuerySchema = zod_1.z.object({
+    lat: zod_1.z.coerce.number().min(-90).max(90),
+    lng: zod_1.z.coerce.number().min(-180).max(180),
+    radiusKm: zod_1.z.coerce.number().min(1).max(5000).default(50), // Default 50km radius
+    interests: zod_1.z.union([zod_1.z.string(), zod_1.z.array(zod_1.z.string())]).optional()
+        .transform(val => Array.isArray(val) ? val : (val ? [val] : []))
 });

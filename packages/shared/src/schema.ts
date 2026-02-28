@@ -130,3 +130,20 @@ export const authAuditLogs = pgTable("auth_audit_logs", {
     userAgent: text("user_agent"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// --- Geolocation & Rooms Schemas ---
+export const createRoomSchema = z.object({
+    name: z.string().min(3).max(64),
+    description: z.string().max(500).optional(),
+    lat: z.number().min(-90).max(90, "Latitude must be between -90 and 90"),
+    lng: z.number().min(-180).max(180, "Longitude must be between -180 and 180"),
+    interests: z.array(z.string().max(50)).min(1).max(5)
+});
+
+export const nearbyRoomsQuerySchema = z.object({
+    lat: z.coerce.number().min(-90).max(90),
+    lng: z.coerce.number().min(-180).max(180),
+    radiusKm: z.coerce.number().min(1).max(5000).default(50), // Default 50km radius
+    interests: z.union([z.string(), z.array(z.string())]).optional()
+        .transform(val => Array.isArray(val) ? val : (val ? [val] : []))
+});

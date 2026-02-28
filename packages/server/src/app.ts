@@ -8,6 +8,7 @@ import { createErrorResponse, createSuccessResponse } from "./utils/response";
 import { healthRoutes } from "./routes/health";
 import { dbTestRoutes } from "./routes/test-db";
 import { authRoutes } from "./routes/auth";
+import { roomRoutes } from "./routes/rooms";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
 import fastifyCsrfProtection from "@fastify/csrf-protection";
@@ -105,6 +106,7 @@ export const buildApp = async () => {
     app.register(healthRoutes, { prefix: "/api" });
     app.register(dbTestRoutes, { prefix: "/api" });
     app.register(authRoutes, { prefix: "/api/auth" });
+    app.register(roomRoutes, { prefix: "/api/rooms" });
 
     // --- Global Error Handler ---
     app.setErrorHandler((error: FastifyError, request, reply) => {

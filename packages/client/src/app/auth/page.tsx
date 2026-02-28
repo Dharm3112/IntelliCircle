@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-import api from "@/lib/api";
+import { api } from "@/lib/api";
 import { motion } from "framer-motion";
 import { Loader2, ArrowRight } from "lucide-react";
 
@@ -33,7 +33,7 @@ export default function AuthPage() {
                     password,
                 });
 
-                const { accessToken, user } = res.data.data;
+                const { accessToken, user } = (res.data as any).data;
                 setAuth(accessToken, user);
                 router.push("/discover"); // Navigate to core app
             } else {
@@ -44,7 +44,7 @@ export default function AuthPage() {
 
                 // 1. Create Identity
                 const anonRes = await api.post("/auth/anonymous", { username });
-                const { accessToken, user } = anonRes.data.data;
+                const { accessToken, user } = (anonRes.data as any).data;
                 // Temporarily set auth to allow the authenticated upgrade endpoint to process
                 setAuth(accessToken, user);
 
