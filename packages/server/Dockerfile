@@ -41,5 +41,11 @@ COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 # Expose the API port
 EXPOSE 8080
 
-# Start the Fastify server
-CMD ["npm", "run", "start", "-w", "@intellicircle/server"]
+# Create a startup script to tune OS limits before executing node
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'ulimit -n 65535' >> /app/start.sh && \
+    echo 'exec npm run start -w @intellicircle/server' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Start using the tuned script
+CMD ["/app/start.sh"]

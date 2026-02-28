@@ -47,6 +47,18 @@ export default function DiscoverPage() {
         }
     };
 
+    const fetchGlobalRooms = async () => {
+        setIsFetching(true);
+        try {
+            const res = await api.get(`/rooms/global`);
+            setRooms((res.data as any).data.rooms || []);
+        } catch (error) {
+            console.error("Failed to fetch global rooms", error);
+        } finally {
+            setIsFetching(false);
+        }
+    };
+
     // Security Gate
     useEffect(() => {
         if (!isAuthenticated) {
@@ -56,8 +68,12 @@ export default function DiscoverPage() {
 
     // Feed Fetcher Effect
     useEffect(() => {
-        fetchNearbyRooms();
-    }, [coordinates, geoLoading, searchRadius]);
+        if (geoError) {
+            fetchGlobalRooms();
+        } else if (coordinates) {
+            fetchNearbyRooms();
+        }
+    }, [coordinates, geoLoading, geoError, searchRadius]);
 
     if (!isAuthenticated) return null; // Gate render until redirect loop catches
 
@@ -95,41 +111,43 @@ export default function DiscoverPage() {
                         <Compass className="w-12 h-12 animate-spin text-zinc-500 mb-4" />
                         <p className="text-zinc-400 font-medium">Acquiring satellite lock...</p>
                     </div>
-                ) : geoError ? (
-                    <div className="flex flex-col items-center p-12 border border-orange-500/20 rounded-3xl bg-orange-500/5">
-                        <AlertCircle className="w-12 h-12 text-orange-400 mb-4" />
-                        <h2 className="text-xl font-bold text-orange-100 mb-2">Location Denied</h2>
-                        <p className="text-orange-200/70 text-center max-w-md">
-                            {geoError} We cannot map you to physical rooms. Showing global/virtual hubs instead.
-                        </p>
-                        {/* Fallback Virtual Hubs render would exist here */}
-                    </div>
                 ) : (
                     <div className="space-y-6">
-                        <div className="flex items-center justify-between bg-white/5 border border-white/10 px-6 py-4 rounded-2xl backdrop-blur-md">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-indigo-500/20 rounded-full">
-                                    <MapPin className="w-5 h-5 text-indigo-400" />
+
+                        {geoError ? (
+                            <div className="flex flex-col items-center p-8 border border-orange-500/20 rounded-3xl bg-orange-500/5 mb-8">
+                                <AlertCircle className="w-10 h-10 text-orange-400 mb-3" />
+                                <h2 className="text-lg font-bold text-orange-100 mb-1">Global Fallback Mode Active</h2>
+                                <p className="text-orange-200/70 text-center max-w-md text-sm">
+                                    {geoError} We cannot map you to physical rooms. Displaying all virtual hubs globally.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-between bg-white/5 border border-white/10 px-6 py-4 rounded-2xl backdrop-blur-md">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-indigo-500/20 rounded-full">
+                                        <MapPin className="w-5 h-5 text-indigo-400" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-zinc-200">Current Vector</p>
+                                        <p className="text-xs text-zinc-500 font-mono">
+                                            {coordinates?.lat.toFixed(4)}, {coordinates?.lng.toFixed(4)}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium text-zinc-200">Current Vector</p>
-                                    <p className="text-xs text-zinc-500 font-mono">
-                                        {coordinates?.lat.toFixed(4)}, {coordinates?.lng.toFixed(4)}
-                                    </p>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-sm text-zinc-400">Radius: {searchRadius}km</span>
+                                    <input
+                                        type="range"
+                                        min="5"
+                                        max="500"
+                                        value={searchRadius}
+                                        onChange={(e) => setSearchRadius(Number(e.target.value))}
+                                        className="accent-indigo-500"
+                                    />
                                 </div>
                             </div>
-                            <div className="flex items-center gap-4">
-                                <span className="text-sm text-zinc-400">Radius: {searchRadius}km</span>
-                                <input
-                                    type="range"
-                                    min="5"
-                                    max="500"
-                                    value={searchRadius}
-                                    onChange={(e) => setSearchRadius(Number(e.target.value))}
-                                    className="accent-indigo-500"
-                                />
-                            </div>
-                        </div>
+                        )}
 
                         {isFetching ? (
                             <div className="p-12 flex justify-center">
@@ -137,8 +155,8 @@ export default function DiscoverPage() {
                             </div>
                         ) : rooms.length === 0 ? (
                             <div className="p-24 text-center border border-dashed border-white/10 rounded-3xl">
-                                <p className="text-zinc-500">No active circles within your search radius.</p>
-                                <button className="mt-4 text-sm text-indigo-400 hover:text-indigo-300">Increase radius</button>
+                                <p className="text-zinc-500">No active circles found in this vector.</p>
+                                {!geoError && <button className="mt-4 text-sm text-indigo-400 hover:text-indigo-300">Increase radius</button>}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -148,6 +166,7 @@ export default function DiscoverPage() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.05 }}
                                         key={room.id}
+                                        onClick={() => router.push(`/chat/${room.id}`)}
                                         className="bg-black/40 border border-white/10 hover:border-white/20 transition-colors rounded-2xl p-6 cursor-pointer group relative overflow-hidden"
                                     >
                                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -162,6 +181,11 @@ export default function DiscoverPage() {
                                                 {room.distanceMeters !== undefined && (
                                                     <span className="text-xs font-mono font-medium bg-white/10 text-zinc-300 px-2 py-1 rounded-md">
                                                         {(room.distanceMeters / 1000).toFixed(1)} km
+                                                    </span>
+                                                )}
+                                                {room.distanceMeters === undefined && (
+                                                    <span className="text-xs font-mono font-medium bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded-md">
+                                                        Global
                                                     </span>
                                                 )}
                                             </div>

@@ -9,9 +9,11 @@ import { healthRoutes } from "./routes/health";
 import { dbTestRoutes } from "./routes/test-db";
 import { authRoutes } from "./routes/auth";
 import { roomRoutes } from "./routes/rooms";
+import { websocketRoutes } from "./websocket/wsHandler";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
 import fastifyCsrfProtection from "@fastify/csrf-protection";
+import fastifyWebsocket from "@fastify/websocket";
 
 declare module "fastify" {
     export interface FastifyInstance {
@@ -43,6 +45,11 @@ export const buildApp = async () => {
     await app.register(cors, {
         origin: env.NODE_ENV === "production" ? ["https://intellicircle.com"] : true,
         credentials: true,
+    });
+
+    // Register WebSockets early in the pipeline to bind the upgrade handlers correctly
+    await app.register(fastifyWebsocket, {
+        options: { maxPayload: 1048576 } // Restrict WS payload sizes to 1MB
     });
 
     // Basic Rate Limiting
@@ -107,6 +114,7 @@ export const buildApp = async () => {
     app.register(dbTestRoutes, { prefix: "/api" });
     app.register(authRoutes, { prefix: "/api/auth" });
     app.register(roomRoutes, { prefix: "/api/rooms" });
+    app.register(websocketRoutes, { prefix: "/ws" });
 
     // --- Global Error Handler ---
     app.setErrorHandler((error: FastifyError, request, reply) => {

@@ -3,7 +3,8 @@ import { db } from "../db/index";
 import { chatRooms, createRoomSchema, nearbyRoomsQuerySchema } from "@intellicircle/shared";
 import { reverseGeocode } from "../services/geocoding";
 import { createSuccessResponse, createErrorResponse } from "../utils/response";
-import { sql } from "drizzle-orm";
+import { sql, eq, desc } from "drizzle-orm";
+import { messages } from "@intellicircle/shared";
 
 export async function roomRoutes(app: FastifyInstance) {
     // 1. Create a New Room with Location
@@ -90,6 +91,67 @@ export async function roomRoutes(app: FastifyInstance) {
         } catch (error) {
             app.log.error(error);
             return reply.status(500).send(createErrorResponse("Failed to discover nearby rooms"));
+        }
+    });
+
+    // 3. Get Global Rooms (Fallback for users without GPS)
+    app.get("/global", { preValidation: [app.authenticate] }, async (request, reply) => {
+        try {
+            const globalRooms = await db.select({
+                id: chatRooms.id,
+                name: chatRooms.name,
+                description: chatRooms.description,
+                interests: chatRooms.interests,
+                createdAt: chatRooms.createdAt,
+            })
+                .from(chatRooms)
+                .where(eq(chatRooms.isActive, 1))
+                .orderBy(desc(chatRooms.createdAt))
+                .limit(50);
+
+            return reply.status(200).send(createSuccessResponse({ rooms: globalRooms, searchRadius: "Global" }));
+        } catch (error) {
+            app.log.error(error);
+            return reply.status(500).send(createErrorResponse("Failed to fetch global rooms"));
+        }
+    });
+
+    // 4. Get Room History (Hydrate chat before WS takes over)
+    app.get("/:id/history", { preValidation: [app.authenticate] }, async (request, reply) => {
+        const _id = (request.params as { id: string }).id;
+        const roomId = parseInt(_id, 10);
+        if (isNaN(roomId)) return reply.status(400).send(createErrorResponse("Invalid Room ID"));
+
+        try {
+            // Fetch Room Details
+            const [roomDef] = await db.select({
+                id: chatRooms.id,
+                name: chatRooms.name,
+                description: chatRooms.description,
+                interests: chatRooms.interests,
+            }).from(chatRooms).where(eq(chatRooms.id, roomId));
+
+            if (!roomDef) return reply.status(404).send(createErrorResponse("Room not found"));
+
+            // Fetch Top 50 latest messages
+            const history = await db.select({
+                id: messages.id,
+                userId: messages.userId,
+                roomId: messages.roomId,
+                content: messages.content,
+                createdAt: messages.createdAt,
+                // Note: Ideally join users table here to get username if needed, 
+                // but WS pushes `username` dynamically. For now, rely on `userId`.
+            }).from(messages).where(eq(messages.roomId, roomId)).orderBy(desc(messages.createdAt)).limit(50);
+
+            // Reverse to chronological order for React Feed
+            return reply.send(createSuccessResponse({
+                room: roomDef,
+                messages: history.reverse()
+            }));
+        } catch (error) {
+            app.log.error(error);
+            return reply.status(500).send(createErrorResponse("Failed to fetch room history"));
         }
     });
 }
