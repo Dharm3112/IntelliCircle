@@ -1,179 +1,128 @@
-# IntelliCircle
+# ✨ IntelliCircle
 
-**IntelliCircle** is a location-based professional networking platform designed to connect individuals through AI-powered chat rooms organized by shared interests and geographic proximity. It facilitates meaningful professional connections by allowing users to discover local colleagues, join interest-specific conversations, and network in real-time.
+**IntelliCircle** is a modern, real-time networking and chat application designed to digitally map users to hyper-localized professional groups. Stop swiping. Start meeting. IntelliCircle calculates physical proximity graphs to instantly drop users into local, highly-curated professional hubs based entirely on shared interests.
 
-## 🚀 Features
+---
 
-  * **Location-Based Discovery**: Automatically detects user location to suggest relevant professional chat rooms nearby.
-  * **Real-Time Chat**: Instant messaging powered by WebSockets, supporting concurrent users and live updates.
-  * **Interest Matching**: categorization of rooms based on professional fields (Technology, Business, Healthcare, etc.).
-  * **Dynamic Room Creation**: Users can create new rooms with specific topics and interest tags.
-  * **User Profiles**: Customizable profiles with professional details, bios, and interest management.
-  * **Waitlist System**: Integrated waitlist functionality for onboarding new users during beta.
-  * **Responsive Design**: Fully mobile-responsive UI built with Tailwind CSS and Shadcn UI.
+## 🏗️ Architecture & Tech Stack
 
-## TB Architecture & Tech Stack
+IntelliCircle utilizes a scalable **npm Workspaces Monorepo**. The frontend and backend codebases live together to share data validation schemas and types but run entirely independently.
 
-IntelliCircle utilizes a modern full-stack architecture with a monorepo-style structure sharing types between the frontend and backend.
+### Frontend (`packages/client`)
+- **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
+- **Styling:** Tailwind CSS & Glassmorphism Design System
+- **State Management:** [Zustand](https://github.com/pmndrs/zustand) (Persistent Local Storage) & TanStack Query
+- **Animations:** Framer Motion (Page Transitions, Dynamic Typing Indicators)
+- **Data Rendering:** `react-virtuoso` (Virtualized infinite chat histories)
 
-### Frontend
+### Backend (`packages/server`)
+- **Server:** [Fastify](https://fastify.dev/) 
+- **Real-Time:** `@fastify/websocket` over standard `ws` protocols
+- **Scaling Backplane:** [Redis Pub/Sub](https://redis.io/) (via Upstash Serverless) for horizontal socket scaling
+- **ORM & DB:** [Drizzle ORM](https://orm.drizzle.team/) connecting to PostgreSQL (Supabase)
+- **Geospatial Math:** **PostGIS** (`ST_DWithin`, `ST_MakePoint`) for calculating earth-curvature distances natively in Postgres.
+- **Security:** Argon2 Hashing, Asymmetric JWTs (RS256), `@fastify/rate-limit`, `@fastify/csrf-protection`
 
-  * **Framework**: [React](https://react.dev/) (v18) with [TypeScript](https://www.typescriptlang.org/)
-  * **Build Tool**: [Vite](https://vitejs.dev/)
-  * **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-  * **UI Components**: [Shcn/ui](https://ui.shadcn.com/) (Radix UI primitives)
-  * **State Management**: [TanStack Query](https://tanstack.com/query/latest)
-  * **Routing**: [Wouter](https://github.com/molefrog/wouter)
-  * **Animations**: [Framer Motion](https://www.framer.com/motion/)
+### Shared APIs (`packages/shared`)
+- **Validation:** [Zod](https://zod.dev/) schemas defining strict payloads boundary parsing for both Client and Server.
 
-### Backend
+---
 
-  * **Server**: [Node.js](https://nodejs.org/) & [Express](https://expressjs.com/)
-  * **Real-Time**: Native `ws` (WebSocket) implementation
-  * **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
-  * **Validation**: [Zod](https://zod.dev/) (Shared schemas between client/server)
-
-### Database
-
-  * **System**: MySQL (via `mysql2` driver)
-  * **Hosting**: Provisioned for InfinityFree/Cloud based on configuration.
-
-## xC Folder Structure
+## 📂 Real-Time Folder Structure
 
 ```text
-├── client/                 # Frontend React Application
-│   ├── src/
-│   │   ├── components/     # Reusable UI components (shadcn/ui)
-│   │   ├── hooks/          # Custom React hooks (use-toast, use-mobile)
-│   │   ├── lib/            # Utilities (queryClient, tailwind merge)
-│   │   ├── pages/          # Application routes (Home, Chat, Discover, Profile)
-│   │   ├── App.tsx         # Main component & Routing logic
-│   │   └── main.tsx        # Entry point
-│   └── index.html
-├── server/                 # Backend Node/Express Application
-│   ├── db.ts               # Database connection configuration
-│   ├── index.ts            # Entry point and server setup
-│   ├── routes.ts           # API routes & WebSocket logic
-│   ├── storage.ts          # Storage interface (Memory/DB abstraction)
-│   └── vite.ts             # Vite middleware for dev mode
-├── shared/                 # Code shared between frontend and backend
-│   └── schema.ts           # Drizzle ORM schemas & Zod types
-├── drizzle.config.ts       # Drizzle Kit configuration
-├── package.json            # Project dependencies and scripts
-└── render.yaml             # Render deployment configuration
+IntelliCircle/
+├── package.json               # Root monorepo workspace definition
+├── README.md                  # This documentation
+├── TODO.md                    # Project Roadmap & MVP Tracking
+│
+├── packages/
+│   ├── client/                # Next.js Frontend Application
+│   │   ├── src/
+│   │   │   ├── app/           # App Router Pages (/(app)/chat, /auth, /discover)
+│   │   │   ├── components/    # Reusable UI (AuthModal, MobileDrawer, PageTransition)
+│   │   │   ├── hooks/         # Custom React hooks (useSocket, useGeolocation)
+│   │   │   ├── lib/           # Intercepted Axios API clients
+│   │   │   └── store/         # Zustand authentication & session store
+│   │   └── tailwind.config.ts # Global theme definitions
+│   │
+│   ├── server/                # Fastify Backend API
+│   │   ├── src/
+│   │   │   ├── config/        # Environment validation (Zod)
+│   │   │   ├── db/            # Drizzle instance and seeding scripts
+│   │   │   ├── routes/        # REST APIs (auth.ts, rooms.ts, waitlist.ts)
+│   │   │   ├── services/      # 3rd party integrations (OpenCage Geocoding)
+│   │   │   ├── websocket/     # Real-time WebSocket handlers & Redis Pub/Sub adapters
+│   │   │   └── app.ts         # Fastify bootstrapper and Global Error Handlers
+│   │   └── drizzle.config.ts  # Database migration configuration
+│   │
+│   └── shared/                # Universal Cross-Platform Logic
+│       └── src/
+│           └── schema.ts      # Single-Source-of-Truth DB Schemas & Zod validation
 ```
 
-## 🛠️ Getting Started
+---
+
+## � How to Start the Project Locally
+
+Because this is a monorepo, **running `npm run dev` in the root folder will fail with a "Missing script" error.** 
+You must start the Frontend and Backend servers in **two separate terminal windows**.
 
 ### Prerequisites
+1. Node.js (v20+ Recommended)
+2. Valid `.env` files in both `packages/server` and `packages/client` containing Supabase PostgreSQL and Upstash Redis URIs.
 
-  * Node.js (v20 or higher recommended)
-  * A MySQL Database connection string
+### Step 1: Start the Backend API (Fastify)
+The backend handles the Database and Real-time WebSockets.
+1. Open Terminal 1.
+2. Navigate to the server folder:
+   ```bash
+   cd packages/server
+   ```
+3. Start the dev server:
+   ```bash
+   npm run dev
+   ```
+   *Success Output:* `🚀 Server listening on http://localhost:8080` (or 8081)
 
-### Installation
+### Step 2: Start the Frontend UI (Next.js)
+1. Open Terminal 2.
+2. Navigate to the client folder:
+   ```bash
+   cd packages/client
+   ```
+3. Start the UI:
+   ```bash
+   npm run dev
+   ```
+   *Success Output:* `Ready in X.Xms - Local: http://localhost:3000`
 
-1.  **Clone the repository:**
+### Step 3: View the App
+Open your web browser and navigate to:
+👉 **[http://localhost:3000](http://localhost:3000)**
 
-    ```bash
-    git clone https://github.com/yourusername/intellicircle.git
-    cd intellicircle
-    ```
+---
 
-2.  **Install dependencies:**
+## 🗄️ Database Changes (Drizzle)
 
-    ```bash
-    npm install
-    ```
+We use Drizzle ORM to manage Postgres. Our single source of truth for the schema lives in `packages/shared/src/schema.ts`.
+If you ever modify a schema there, you need to push those changes to the live Supabase database.
 
-3.  **Environment Configuration:**
-    Create a `.env` file in the root directory (or use the existing one). You must provide a valid database URL.
+From the `packages/server` folder, run:
+```bash
+npm run db:push
+```
 
-    ```env
-    DATABASE_URL="mysql://user:password@host:port/database_name"
-    ```
+---
 
-4.  **Database Migration:**
-    Push the schema to your database using Drizzle Kit.
+## 🐛 Common Troubleshooting
 
-    ```bash
-    npm run db:push
-    ```
-
-### Running the Application
-
-  * **Development Mode:**
-    Runs the Express server with Vite middleware for hot-reloading the frontend.
-
-    ```bash
-    npm run dev
-    ```
-
-    The app will be available at `http://localhost:5000`.
-
-  * **Production Build:**
-    Builds the client and server for production.
-
-    ```bash
-    npm run build
-    npm run start
-    ```
-
-## 🔌 API & WebSockets
-
-### REST API
-
-  * `POST /api/waitlist`: Adds a user to the waitlist.
-      * Payload: `{ fullName, email, profession, location, interests }`
-
-### WebSocket Events
-
-The chat system uses a JSON-based message protocol over WebSockets (`/ws`).
-
-  * **Client -\> Server:**
-
-      * `joinRoom`: `{ type: 'joinRoom', roomId, username }`
-      * `sendMessage`: `{ type: 'sendMessage', roomId, content }`
-      * `createRoom`: `{ type: 'createRoom', name, interests }`
-      * `getRooms`: `{ type: 'getRooms' }`
-      * `ping`: `{ type: 'ping' }` (Keep-alive)
-
-  * **Server -\> Client:**
-
-      * `rooms`: Returns list of available rooms.
-      * `message`: Broadcasts a new message to a room.
-      * `roomJoined`: Returns full room history/details upon joining.
-      * `participantsUpdate`: Updates the list of active users in a room.
-
-## 💾 Database Schema
-
-The database schema is defined in `shared/schema.ts` and includes:
-
-  * **waitlist**: Stores prospective users (email, interests, etc.).
-  * **users**: Stores chat users.
-  * **chatRooms**: Active chat rooms and their metadata.
-  * **messages**: History of messages per room.
-  * **participants**: Junction table for users in rooms.
-
-## ☁️ Deployment
-
-The project is configured for deployment on various platforms:
-
-  * **Render**: Use `render.yaml` for a blueprint deployment of the web service and database.
-  * **Netlify**: `netlify.toml` handles the client-side build settings (`npm run build:client`).
-  * **Replit**: `.replit` and `replit.md` are configured for instant cloud development.
-
-## 🤝 Contributing
-
-Contributions are welcome\! Please follow these steps:
-
-1.  Fork the project.
-2.  Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
-
-## 📄 License
-
-Distributed under the MIT License. See [LICENSE](https://github.com/Dharm3112/IntelliCircle/blob/main/LICENSE) for more information.
-
-*Created by [Dharm Patel](https://github.com/Dharm3112) & [Pushti Kadia](https://github.com/pushtikadia)*
+*   **"npm error Missing script: dev"**
+    *   You are running Node in the root folder. You *must* `cd` into either `packages/client` or `packages/server` first!
+*   **"Port 3000 / 8080 is already in use"**
+    *   You have an orphaned process. Open PowerShell in Windows and run:
+        `Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force`
+*   **"Discover Page: 400 Bad Request"**
+    *   Ensure that you granted Location/GPS permissions in your web browser. The Discover page mathematically filters rooms based on your exact physical location coordinates.
+*   **"WebSocket Reconnecting..." constantly flashes**
+    *   Ensure that your Upstash Redis credentials inside `packages/server/.env` are active. WebSockets require the Redis PubSub backbone to bind.

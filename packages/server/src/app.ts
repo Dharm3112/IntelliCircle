@@ -120,8 +120,17 @@ export const buildApp = async () => {
 
     // --- Global Error Handler ---
     app.setErrorHandler((error: FastifyError, request, reply) => {
-        app.log.error(error);
         const statusCode = error.statusCode || 500;
+
+        if (statusCode === 400) {
+            app.log.error(`[400 Bad Request] URL: ${request.url}`);
+            app.log.error(`[400 Bad Request] Query: ${JSON.stringify(request.query)}`);
+            app.log.error(`[400 Bad Request] Body: ${JSON.stringify(request.body)}`);
+            app.log.error(error, `[400 Bad Request] Error:`);
+        } else {
+            app.log.error(error);
+        }
+
         const message = env.NODE_ENV === "production" && statusCode === 500 ? "Internal Server Error" : error.message;
         reply.status(statusCode).send(createErrorResponse(message, error.code));
     });
