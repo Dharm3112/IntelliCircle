@@ -7,11 +7,15 @@ import { sql } from "drizzle-orm";
 import DOMPurify from "isomorphic-dompurify";
 
 const wsIncomingMessageSchema = z.object({
-    type: z.enum(["join_room", "send_message", "leave_room"]),
+    type: z.enum(["join_room", "send_message", "leave_room", "typing_start", "typing_stop"]),
     payload: z.any(),
 });
 
 const joinRoomPayloadSchema = z.object({
+    roomId: z.number().int().positive(),
+});
+
+const typingPayloadSchema = z.object({
     roomId: z.number().int().positive(),
 });
 
@@ -166,6 +170,24 @@ export async function websocketRoutes(app: FastifyInstance) {
                         app.log.error(dbError);
                         socket.send(JSON.stringify({ type: "error", message: "Failed to save message due to internal error." }));
                     }
+                }
+
+                // --- Event: Typing Start / Stop ---
+                else if (type === "typing_start" || type === "typing_stop") {
+                    const typingData = typingPayloadSchema.safeParse(payload);
+                    if (!typingData.success) return; // Ephemeral events can silently fail
+
+                    const { roomId } = typingData.data;
+
+                    if (!clientContext.activeRooms.has(roomId)) return;
+
+                    const typingEvent = JSON.stringify({
+                        type,
+                        payload: { roomId, userId: clientContext.userId, username: clientContext.username }
+                    });
+
+                    // Bypass postgres completely, pipe straight to redis
+                    await publisher.publish(`room:${roomId}`, typingEvent);
                 }
             });
 

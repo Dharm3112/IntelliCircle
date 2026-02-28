@@ -9,6 +9,7 @@ import { Send, ArrowLeft, Users, Loader2, Wifi, WifiOff, Menu } from "lucide-rea
 import { MobileDrawer } from "@/components/mobile-drawer";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { Virtuoso } from "react-virtuoso";
 
 interface Message {
     id: number;
@@ -37,7 +38,10 @@ export default function ChatRoomPage() {
     const [input, setInput] = useState("");
     const [participants, setParticipants] = useState<any[]>([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Typing indicator states
+    const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Initial Gate
     useEffect(() => {
@@ -81,25 +85,48 @@ export default function ChatRoomPage() {
 
                 // Also update local state for immediate render
                 setMessages(prev => [...prev, data.payload]);
-                scrollToBottom();
             } else if (data.type === "user_joined") {
                 // In production, we'd add to the precise participants list based on payload diff
                 // For now, we'll refetch or push
             } else if (data.type === "user_left") {
                 // Remove from participants list
+            } else if (data.type === "typing_start") {
+                if (data.payload.userId !== user?.id) {
+                    setTypingUsers(prev => {
+                        const next = new Set(prev);
+                        next.add(data.payload.username || "Anon");
+                        return next;
+                    });
+                }
+            } else if (data.type === "typing_stop") {
+                if (data.payload.userId !== user?.id) {
+                    setTypingUsers(prev => {
+                        const next = new Set(prev);
+                        next.delete(data.payload.username || "Anon");
+                        return next;
+                    });
+                }
             }
         });
 
         return () => unsubscribe();
     }, [connected, id, sendMessage, subscribe]);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+    const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInput(e.target.value);
+        if (!connected) return;
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        // Broadcast we are typing
+        sendMessage("typing_start", { roomId: Number(id) });
+
+        // Clear existing debounce
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        // Stop typing indicator after 1 second of inactivity
+        typingTimeoutRef.current = setTimeout(() => {
+            sendMessage("typing_stop", { roomId: Number(id) });
+        }, 1000);
+    };
 
     const handleSend = (e: React.FormEvent) => {
         e.preventDefault();
@@ -107,6 +134,10 @@ export default function ChatRoomPage() {
 
         sendMessage("send_message", { roomId: Number(id), content: input.trim() });
         setInput(""); // Optimistic clear, true add happens via WS bounceback to prevent duplication
+
+        // Immediately halt typing indicator
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        sendMessage("typing_stop", { roomId: Number(id) });
     };
 
     if (!isAuthenticated) return null;
@@ -191,25 +222,26 @@ export default function ChatRoomPage() {
                 </header>
 
                 {/* Message Feed */}
-                <main className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 relative bg-black/50">
+                <main className="flex-1 overflow-hidden relative bg-black/50 flex flex-col pt-4">
                     {historyLoading ? (
                         <div className="flex items-center justify-center h-full text-zinc-500 flex-col gap-3">
                             <Loader2 className="w-6 h-6 animate-spin text-indigo-500" />
                             <span className="text-sm font-medium">Hydrating history...</span>
                         </div>
                     ) : (
-                        <div className="max-w-4xl mx-auto space-y-3 pb-4">
-                            <AnimatePresence>
-                                {messages.map((msg, i) => {
+                        <div className="flex-1 w-full max-w-4xl mx-auto">
+                            <Virtuoso
+                                data={messages}
+                                initialTopMostItemIndex={messages.length > 0 ? messages.length - 1 : 0}
+                                followOutput={(isAtBottom: boolean) => (isAtBottom ? "smooth" : false)}
+                                className="h-full w-full px-4 lg:px-6"
+                                itemContent={(i, msg) => {
                                     const isMe = msg.userId === user?.id;
 
                                     return (
-                                        <motion.div
+                                        <div
                                             key={msg.id || `temp-${i}`}
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            layout
-                                            className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+                                            className={`flex flex-col py-2 ${isMe ? 'items-end' : 'items-start'}`}
                                         >
                                             {!isMe && (
                                                 <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1 ml-1">
@@ -224,11 +256,34 @@ export default function ChatRoomPage() {
                                             >
                                                 <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
                                             </div>
-                                        </motion.div>
+                                        </div>
                                     );
-                                })}
-                            </AnimatePresence>
-                            <div ref={messagesEndRef} />
+                                }}
+                                components={{
+                                    Footer: () => (
+                                        <AnimatePresence>
+                                            {typingUsers.size > 0 && (
+                                                <motion.div
+                                                    key="typing-indicator"
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: 10 }}
+                                                    className="text-xs text-zinc-400 font-medium italic mt-2 ml-2 pb-4"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex gap-1 items-center">
+                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                        </div>
+                                                        {Array.from(typingUsers).join(", ")} {typingUsers.size > 1 ? "are" : "is"} typing...
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    )
+                                }}
+                            />
                         </div>
                     )}
                 </main>
@@ -241,7 +296,7 @@ export default function ChatRoomPage() {
                                 id="chat-input"
                                 type="text"
                                 value={input}
-                                onChange={(e) => setInput(e.target.value)}
+                                onChange={handleTyping}
                                 disabled={!connected || historyLoading}
                                 autoComplete="off"
                                 placeholder={connected ? "Type a message..." : "Reconnecting to network..."}
