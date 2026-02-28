@@ -7,8 +7,11 @@ let redisClient: Redis | null = null;
 export const getRedisClient = (): Redis => {
     if (redisClient) return redisClient;
 
+    // Enforce TLS connection for remote Redis
+    const isRediss = env.REDIS_URL.startsWith("rediss://");
     redisClient = new Redis(env.REDIS_URL, {
         maxRetriesPerRequest: null,
+        ...(isRediss ? { tls: {} } : {})
     });
 
     redisClient.on("error", (err) => {

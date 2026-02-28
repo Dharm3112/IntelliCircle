@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.selectWaitlistSchema = exports.insertWaitlistSchema = exports.participants = exports.messages = exports.chatRooms = exports.users = exports.waitlist = void 0;
+exports.loginAuthSchema = exports.upgradeAuthSchema = exports.anonymousAuthSchema = exports.selectWaitlistSchema = exports.insertWaitlistSchema = exports.participants = exports.messages = exports.chatRooms = exports.users = exports.waitlist = void 0;
 const pg_core_1 = require("drizzle-orm/pg-core");
 const zod_1 = require("zod");
 // --- Waitlist Table ---
@@ -12,11 +12,17 @@ exports.waitlist = (0, pg_core_1.pgTable)("waitlist", {
     location: (0, pg_core_1.varchar)("location", { length: 256 }).notNull(),
     profession: (0, pg_core_1.varchar)("profession", { length: 256 }).notNull(),
 });
-// --- User Table ---
 exports.users = (0, pg_core_1.pgTable)("users", {
     id: (0, pg_core_1.serial)("id").primaryKey(),
     username: (0, pg_core_1.varchar)("username", { length: 256 }).notNull().unique(),
+    email: (0, pg_core_1.varchar)("email", { length: 256 }).unique(),
+    passwordHash: (0, pg_core_1.varchar)("password_hash", { length: 256 }),
+    role: (0, pg_core_1.varchar)("role", { length: 50 }).notNull().default("user"),
     createdAt: (0, pg_core_1.timestamp)("created_at").notNull().defaultNow(),
+    updatedAt: (0, pg_core_1.timestamp)("updated_at")
+        .notNull()
+        .defaultNow()
+        .$onUpdate(() => new Date()),
 });
 const pg_core_2 = require("drizzle-orm/pg-core");
 // Custom PostGIS Point Type
@@ -68,4 +74,16 @@ exports.selectWaitlistSchema = exports.insertWaitlistSchema.extend({
     id: zod_1.z.number(),
     status: zod_1.z.enum(["pending", "approved", "rejected"]),
     joinedAt: zod_1.z.date()
+});
+// --- Auth Schemas ---
+exports.anonymousAuthSchema = zod_1.z.object({
+    username: zod_1.z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+});
+exports.upgradeAuthSchema = zod_1.z.object({
+    email: zod_1.z.string().email(),
+    password: zod_1.z.string().min(8, "Password must be at least 8 characters long"),
+});
+exports.loginAuthSchema = zod_1.z.object({
+    usernameOrEmail: zod_1.z.string(),
+    password: zod_1.z.string(),
 });

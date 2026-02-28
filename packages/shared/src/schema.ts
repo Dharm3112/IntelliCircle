@@ -21,11 +21,17 @@ export const waitlist = pgTable("waitlist", {
     profession: varchar("profession", { length: 256 }).notNull(),
 });
 
-// --- User Table ---
 export const users = pgTable("users", {
     id: serial("id").primaryKey(),
     username: varchar("username", { length: 256 }).notNull().unique(),
+    email: varchar("email", { length: 256 }).unique(),
+    passwordHash: varchar("password_hash", { length: 256 }),
+    role: varchar("role", { length: 50 }).notNull().default("user"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+        .notNull()
+        .defaultNow()
+        .$onUpdate(() => new Date()),
 });
 
 import { customType } from "drizzle-orm/pg-core";
@@ -93,4 +99,34 @@ export const selectWaitlistSchema = insertWaitlistSchema.extend({
     id: z.number(),
     status: z.enum(["pending", "approved", "rejected"]),
     joinedAt: z.date()
+});
+
+// --- Auth Schemas ---
+export const anonymousAuthSchema = z.object({
+    username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+});
+
+export const upgradeAuthSchema = z.object({
+    email: z.string().email(),
+    password: z.string()
+        .min(8, "Password must be at least 8 characters long")
+        .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+        .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+        .regex(/[0-9]/, "Password must contain at least one number")
+        .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+});
+
+export const loginAuthSchema = z.object({
+    usernameOrEmail: z.string(),
+    password: z.string(), // Keep login schema simple to not leak requirements to attackers
+});
+
+// --- Audit Logs ---
+export const authAuditLogs = pgTable("auth_audit_logs", {
+    id: serial("id").primaryKey(),
+    ipAddress: varchar("ip_address", { length: 45 }), // 45 chars handles IPv6
+    eventType: varchar("event_type", { length: 50 }).notNull(), // 'login_failed', 'signup_failed', etc.
+    usernameOrEmailAttempted: varchar("attempted_identity", { length: 256 }),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
 });

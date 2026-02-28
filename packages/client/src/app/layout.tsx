@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 import { Providers } from "../components/providers";
+import { Header } from "../components/header";
 
 export default function RootLayout({
     children,
@@ -21,7 +22,10 @@ export default function RootLayout({
         <html lang="en">
             <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans`}>
                 <Providers>
-                    {children}
+                    <Header />
+                    <main className="pt-16 min-h-screen">
+                        {children}
+                    </main>
                 </Providers>
             </body>
         </html>

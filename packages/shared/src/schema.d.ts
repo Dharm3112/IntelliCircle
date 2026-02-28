@@ -158,8 +158,82 @@ export declare const users: import("drizzle-orm/pg-core").PgTableWithColumns<{
         }, {}, {
             length: 256;
         }>;
+        email: import("drizzle-orm/pg-core").PgColumn<{
+            name: "email";
+            tableName: "users";
+            dataType: "string";
+            columnType: "PgVarchar";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {
+            length: 256;
+        }>;
+        passwordHash: import("drizzle-orm/pg-core").PgColumn<{
+            name: "password_hash";
+            tableName: "users";
+            dataType: "string";
+            columnType: "PgVarchar";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {
+            length: 256;
+        }>;
+        role: import("drizzle-orm/pg-core").PgColumn<{
+            name: "role";
+            tableName: "users";
+            dataType: "string";
+            columnType: "PgVarchar";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {
+            length: 50;
+        }>;
         createdAt: import("drizzle-orm/pg-core").PgColumn<{
             name: "created_at";
+            tableName: "users";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        updatedAt: import("drizzle-orm/pg-core").PgColumn<{
+            name: "updated_at";
             tableName: "users";
             dataType: "date";
             columnType: "PgTimestamp";
@@ -498,4 +572,31 @@ export declare const selectWaitlistSchema: z.ZodObject<{
     joinedAt: Date;
     profession?: string | undefined;
     name?: string | undefined;
+}>;
+export declare const anonymousAuthSchema: z.ZodObject<{
+    username: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    username: string;
+}, {
+    username: string;
+}>;
+export declare const upgradeAuthSchema: z.ZodObject<{
+    email: z.ZodString;
+    password: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    email: string;
+    password: string;
+}, {
+    email: string;
+    password: string;
+}>;
+export declare const loginAuthSchema: z.ZodObject<{
+    usernameOrEmail: z.ZodString;
+    password: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    password: string;
+    usernameOrEmail: string;
+}, {
+    password: string;
+    usernameOrEmail: string;
 }>;

@@ -4,9 +4,20 @@ import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import { env } from "./config/env";
 import { logger } from "./utils/logger";
-import { createErrorResponse } from "./utils/response";
+import { createErrorResponse, createSuccessResponse } from "./utils/response";
 import { healthRoutes } from "./routes/health";
 import { dbTestRoutes } from "./routes/test-db";
+import { authRoutes } from "./routes/auth";
+import fastifyJwt from "@fastify/jwt";
+import fastifyCookie from "@fastify/cookie";
+import fastifyCsrfProtection from "@fastify/csrf-protection";
+
+declare module "fastify" {
+    export interface FastifyInstance {
+        authenticate: any;
+        requireRole: (roles: string[]) => any;
+    }
+}
 
 export const buildApp = async () => {
     const app = Fastify({
@@ -30,6 +41,7 @@ export const buildApp = async () => {
     await app.register(helmet);
     await app.register(cors, {
         origin: env.NODE_ENV === "production" ? ["https://intellicircle.com"] : true,
+        credentials: true,
     });
 
     // Basic Rate Limiting
@@ -38,9 +50,61 @@ export const buildApp = async () => {
         timeWindow: "1 minute",
     });
 
+    // --- Auth Plugins ---
+    await app.register(fastifyJwt, {
+        secret: {
+            private: env.JWT_PRIVATE_KEY,
+            public: env.JWT_PUBLIC_KEY,
+        },
+        sign: {
+            algorithm: 'RS256'
+        },
+        cookie: {
+            cookieName: 'refreshToken',
+            signed: false,
+        }
+    });
+
+    await app.register(fastifyCookie);
+    await app.register(fastifyCsrfProtection, {
+        cookieOpts: { signed: false },
+        sessionPlugin: '@fastify/cookie'
+    });
+
+    // --- CSRF Endpoint ---
+    app.get("/api/csrf", async (request, reply) => {
+        const token = await reply.generateCsrf();
+        return reply.status(200).send(createSuccessResponse({ csrfToken: token }));
+    });
+
+    // --- Authentication Decorator ---
+    app.decorate("authenticate", async (request: any, reply: any) => {
+        try {
+            await request.jwtVerify();
+        } catch (err) {
+            reply.status(401).send(createErrorResponse("Unauthorized", "UNAUTHORIZED"));
+        }
+    });
+
+    // --- RBAC Decorator ---
+    app.decorate("requireRole", (allowedRoles: string[]) => {
+        return async (request: any, reply: any) => {
+            try {
+                await request.jwtVerify();
+                const user = request.user as { role: string };
+                if (!allowedRoles.includes(user.role)) {
+                    return reply.status(403).send(createErrorResponse("Forbidden: Insufficient privileges", "FORBIDDEN"));
+                }
+            } catch (err) {
+                reply.status(401).send(createErrorResponse("Unauthorized", "UNAUTHORIZED"));
+            }
+        };
+    });
+
     // --- Routes ---
     app.register(healthRoutes, { prefix: "/api" });
     app.register(dbTestRoutes, { prefix: "/api" });
+    app.register(authRoutes, { prefix: "/api/auth" });
 
     // --- Global Error Handler ---
     app.setErrorHandler((error: FastifyError, request, reply) => {
