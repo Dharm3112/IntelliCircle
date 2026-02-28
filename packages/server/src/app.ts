@@ -6,10 +6,24 @@ import { env } from "./config/env";
 import { logger } from "./utils/logger";
 import { createErrorResponse } from "./utils/response";
 import { healthRoutes } from "./routes/health";
+import { dbTestRoutes } from "./routes/test-db";
 
 export const buildApp = async () => {
     const app = Fastify({
-        logger,
+        logger: {
+            level: env.NODE_ENV === "production" ? "info" : "debug",
+            transport:
+                env.NODE_ENV !== "production"
+                    ? {
+                        target: "pino-pretty",
+                        options: {
+                            colorize: true,
+                            translateTime: "HH:MM:ss Z",
+                            ignore: "pid,hostname",
+                        },
+                    }
+                    : undefined,
+        },
     });
 
     // --- Security Plugins ---
@@ -26,6 +40,7 @@ export const buildApp = async () => {
 
     // --- Routes ---
     app.register(healthRoutes, { prefix: "/api" });
+    app.register(dbTestRoutes, { prefix: "/api" });
 
     // --- Global Error Handler ---
     app.setErrorHandler((error: FastifyError, request, reply) => {

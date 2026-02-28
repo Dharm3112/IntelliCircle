@@ -28,12 +28,30 @@ export const users = pgTable("users", {
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+import { customType } from "drizzle-orm/pg-core";
+
+// Custom PostGIS Point Type
+const point = customType<{ data: { x: number; y: number }, driverData: string }>({
+    dataType() {
+        return 'geometry(Point, 4326)';
+    },
+    toDriver(value) {
+        return `SRID=4326;POINT(${value.x} ${value.y})`;
+    },
+});
+
+import { sql } from "drizzle-orm";
+
 // --- Chat Rooms Table ---
 // Note: Spatial columns (geometry) will be added natively via raw SQL migrations or Drizzle custom types later.
 export const chatRooms = pgTable("chatRooms", {
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 256 }).notNull(),
+    description: text("description"),
+    // Temporarily using point as standard varchar for initial seeding until PostGIS custom type mapping is perfected
+    location: point("location"),
     interests: json("interests").$type<string[]>().notNull(),
+    isActive: integer("is_active").default(1).notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
