@@ -26,15 +26,17 @@ export const UpgradeAccountModal = () => {
         setError(null);
 
         try {
-            const { data } = await api.post("/auth/upgrade", { email, password });
+            const res = await api.post("/auth/upgrade", { email, password });
+            const data = res.data as any;
             if (data.success) {
                 setSuccess(true);
                 setTimeout(() => {
                     setIsOpen(false);
+                    window.location.reload(); // Force full app reload to hydrate permanent user context
                 }, 2000); // Close after 2 seconds on success
             }
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to upgrade account.");
+        } catch (error: any) {
+            setError(error.response?.data?.message || "Failed to upgrade account.");
         } finally {
             setIsLoading(false);
         }

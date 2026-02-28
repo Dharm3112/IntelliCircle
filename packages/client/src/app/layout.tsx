@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 
 import { Providers } from "../components/providers";
 import { Header } from "../components/header";
+import PageTransition from "../components/page-transition";
 
 export default function RootLayout({
     children,
@@ -23,8 +24,10 @@ export default function RootLayout({
             <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans`}>
                 <Providers>
                     <Header />
-                    <main className="pt-16 min-h-screen">
-                        {children}
+                    <main className="pt-16 min-h-screen flex flex-col">
+                        <PageTransition>
+                            {children}
+                        </PageTransition>
                     </main>
                 </Providers>
             </body>

@@ -20,13 +20,14 @@ export const AuthModal = () => {
         setError(null);
 
         try {
-            const { data } = await api.post("/auth/anonymous", { username });
+            const res = await api.post("/auth/anonymous", { username });
+            const data = res.data as any;
             if (data.success) {
                 setAuth(data.data.accessToken, data.data.user);
                 setIsOpen(false);
             }
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to authenticate. Please try again.");
+        } catch (error: any) {
+            setError(error.response?.data?.message || "Failed to authenticate. Please try again.");
         } finally {
             setIsLoading(false);
         }

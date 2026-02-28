@@ -9,6 +9,7 @@ import { healthRoutes } from "./routes/health";
 import { dbTestRoutes } from "./routes/test-db";
 import { authRoutes } from "./routes/auth";
 import { roomRoutes } from "./routes/rooms";
+import { waitlistRoutes } from "./routes/waitlist";
 import { websocketRoutes } from "./websocket/wsHandler";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
@@ -114,6 +115,7 @@ export const buildApp = async () => {
     app.register(dbTestRoutes, { prefix: "/api" });
     app.register(authRoutes, { prefix: "/api/auth" });
     app.register(roomRoutes, { prefix: "/api/rooms" });
+    app.register(waitlistRoutes, { prefix: "/api/waitlist" });
     app.register(websocketRoutes, { prefix: "/ws" });
 
     // --- Global Error Handler ---

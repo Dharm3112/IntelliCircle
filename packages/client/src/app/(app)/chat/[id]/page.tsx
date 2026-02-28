@@ -5,8 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useSocket } from "@/hooks/useSocket";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ArrowLeft, Users, Loader2, Wifi, WifiOff } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Send, ArrowLeft, Users, Loader2, Wifi, WifiOff, Menu } from "lucide-react";
+import { MobileDrawer } from "@/components/mobile-drawer";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 
 interface Message {
@@ -29,11 +30,13 @@ export default function ChatRoomPage() {
     const router = useRouter();
     const { isAuthenticated, user } = useAuthStore();
     const { connected, connecting, error, subscribe, sendMessage } = useSocket();
+    const queryClient = useQueryClient();
 
     const [room, setRoom] = useState<RoomData | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
     const [participants, setParticipants] = useState<any[]>([]);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Initial Gate
@@ -67,6 +70,16 @@ export default function ChatRoomPage() {
 
         const unsubscribe = subscribe((data: any) => {
             if (data.type === "new_message") {
+                // Sync the incoming WS message straight into the TanStack cache
+                queryClient.setQueryData(["roomHistory", id], (old: any) => {
+                    if (!old) return old;
+                    return {
+                        ...old,
+                        messages: [...(old.messages || []), data.payload]
+                    };
+                });
+
+                // Also update local state for immediate render
                 setMessages(prev => [...prev, data.payload]);
                 scrollToBottom();
             } else if (data.type === "user_joined") {
@@ -147,9 +160,15 @@ export default function ChatRoomPage() {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => router.push("/discover")}
-                            className="p-2 hover:bg-white/10 rounded-full transition-colors md:hidden"
+                            className="p-2 hover:bg-white/10 rounded-full transition-colors hidden md:block" // Desktop back
                         >
                             <ArrowLeft className="w-5 h-5 text-zinc-400" />
+                        </button>
+                        <button
+                            onClick={() => setIsDrawerOpen(true)}
+                            className="p-2 hover:bg-white/10 rounded-full transition-colors md:hidden" // Mobile menu
+                        >
+                            <Menu className="w-5 h-5 text-zinc-400" />
                         </button>
                         <div>
                             <h2 className="font-bold tracking-tight">{room?.name || `Room #${id}`}</h2>
@@ -199,8 +218,8 @@ export default function ChatRoomPage() {
                                             )}
                                             <div
                                                 className={`px-4 py-2.5 rounded-2xl max-w-[85%] ${isMe
-                                                        ? 'bg-indigo-600 text-white rounded-br-sm'
-                                                        : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-white/5'
+                                                    ? 'bg-indigo-600 text-white rounded-br-sm'
+                                                    : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-white/5'
                                                     }`}
                                             >
                                                 <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
@@ -238,6 +257,49 @@ export default function ChatRoomPage() {
                         </form>
                     </div>
                 </footer>
+                {/* Mobile Drawer */}
+                <MobileDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} title="Room Info">
+                    <div className="p-4 space-y-6">
+                        <button
+                            onClick={() => router.push("/discover")}
+                            className="flex items-center gap-2 w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="text-sm font-medium">Leave & Return to Map</span>
+                        </button>
+
+                        {room ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <h2 className="text-xl font-bold tracking-tight mb-2">{room.name}</h2>
+                                    <p className="text-sm text-zinc-400 leading-relaxed">{room.description || "No description provided."}</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Interests</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {room.interests.map((tag: string) => (
+                                            <span key={tag} className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] font-medium text-zinc-300">
+                                                #{tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : null}
+
+                        <div className="pt-4 border-t border-white/10">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Participants ({participants.length})</h3>
+                            {participants.map((p, i) => (
+                                <div key={i} className="flex items-center gap-3 py-2">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/50 flex items-center justify-center">
+                                        <Users className="w-3.5 h-3.5 text-indigo-400" />
+                                    </div>
+                                    <span className="text-sm font-medium text-zinc-200">{p.username || "Anon"}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </MobileDrawer>
             </div>
         </div>
     );
