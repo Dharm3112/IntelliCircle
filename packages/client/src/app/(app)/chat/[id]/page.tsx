@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useSocket } from "@/hooks/useSocket";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ArrowLeft, Users, Loader2, Wifi, WifiOff, Menu } from "lucide-react";
+import { Send, ArrowLeft, Users, Loader2, Wifi, WifiOff, Menu, Sparkles } from "lucide-react";
 import { MobileDrawer } from "@/components/mobile-drawer";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -36,6 +36,7 @@ export default function ChatRoomPage() {
 
     const [room, setRoom] = useState<RoomData | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
+    const [roomSummary, setRoomSummary] = useState<string | null>(null);
     const [input, setInput] = useState("");
     const [participants, setParticipants] = useState<any[]>([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -119,6 +120,8 @@ export default function ChatRoomPage() {
                         return next;
                     });
                 }
+            } else if (data.type === "room_summary_update") {
+                setRoomSummary(data.content);
             } else if (data.type === "error") {
                 toast.error(data.message || "Network Error");
             }
@@ -270,7 +273,26 @@ export default function ChatRoomPage() {
                         </div>
                     ) : (
                         <div className="flex-1 w-full h-full min-h-0 max-w-4xl mx-auto flex flex-col overflow-y-auto px-4 lg:px-6 scroll-smooth">
-                            <div className="flex flex-col gap-1 mt-auto pb-4 w-full">
+                            <div className="flex flex-col gap-1 mt-auto pb-4 w-full pt-4">
+                                {roomSummary && (
+                                    <div className="mb-6 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 shadow-lg backdrop-blur-md relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                                        <div className="flex gap-3 relative z-10">
+                                            <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
+                                                <Sparkles className="w-4 h-4 text-indigo-400" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-400 mb-1 flex items-center gap-2">
+                                                    AI Context Summary
+                                                </h4>
+                                                <p className="text-sm text-zinc-300 leading-relaxed">
+                                                    {roomSummary}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {messages.map((msg, i) => {
                                     const isMe = msg.userId === user?.id;
 

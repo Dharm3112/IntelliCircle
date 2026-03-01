@@ -5,6 +5,8 @@ import { db } from "../db/index";
 import { messages } from "@intellicircle/shared";
 import { sql } from "drizzle-orm";
 import DOMPurify from "isomorphic-dompurify";
+import { getRedisClient } from "../db/redis";
+import { backgroundJobService } from "../services/queue";
 
 const wsIncomingMessageSchema = z.object({
     type: z.enum(["join_room", "send_message", "leave_room", "typing_start", "typing_stop"]),
@@ -126,6 +128,25 @@ export async function websocketRoutes(app: FastifyInstance) {
                     });
 
                     await publisher.publish(`room:${roomId}`, joinEvent);
+
+                    // --- Phase 8 AI Integration ---
+                    const redis = getRedisClient();
+                    const summaryKey = `room:summary:${roomId}`;
+                    const existingSummary = await redis.get(summaryKey);
+
+                    if (existingSummary) {
+                        socket.send(JSON.stringify({
+                            type: "room_summary_update",
+                            content: existingSummary,
+                            timestamp: new Date().toISOString() // Or metadata
+                        }));
+                    } else {
+                        // If there is no summary, fire a job to the background worker to create one.
+                        // It will use PubSub when finished to deliver the summary to anyone in the room.
+                        backgroundJobService.dispatchSummarizeRoom(roomId).catch(err => {
+                            app.log.error({ err, roomId }, "Failed to dispatch AI summarize job");
+                        });
+                    }
                 }
 
                 // --- Event: Send Message ---

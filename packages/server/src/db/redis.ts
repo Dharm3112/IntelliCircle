@@ -24,3 +24,12 @@ export const getRedisClient = (): Redis => {
 
     return redisClient;
 };
+
+// BullMQ needs its own connection because workers use blocking redis commands that tie up the connection
+export const getBullMQConnection = (): Redis => {
+    const isRediss = env.REDIS_URL.startsWith("rediss://");
+    return new Redis(env.REDIS_URL, {
+        maxRetriesPerRequest: null,
+        ...(isRediss ? { tls: {} } : {})
+    });
+};

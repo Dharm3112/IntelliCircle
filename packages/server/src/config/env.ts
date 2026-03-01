@@ -20,6 +20,7 @@ const envSchema = z.object({
     JWT_PRIVATE_KEY: z.string().min(50, "Valid RSA Private Key required"),
     JWT_PUBLIC_KEY: z.string().min(50, "Valid RSA Public Key required"),
     OPENCAGE_API_KEY: z.string().optional(), // Used for reverse geocoding Lat/Lng
+    GEMINI_API_KEY: z.string().optional(), // Used for AI chat summaries
 });
 
 const _env = envSchema.safeParse(process.env);
