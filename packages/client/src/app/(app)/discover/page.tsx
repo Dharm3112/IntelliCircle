@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { motion } from "framer-motion";
 import { Loader2, MapPin, Compass, AlertCircle, PlusCircle } from "lucide-react";
 import { CreateRoomModal } from "@/components/CreateRoomModal";
+import { usePostHog } from 'posthog-js/react';
 
 interface Room {
     id: number;
@@ -20,6 +21,7 @@ interface Room {
 export default function DiscoverPage() {
     const { isAuthenticated, user } = useAuthStore();
     const router = useRouter();
+    const posthog = usePostHog();
     const { coordinates, loading: geoLoading, error: geoError } = useGeolocation();
 
     const [rooms, setRooms] = useState<Room[]>([]);
@@ -75,8 +77,10 @@ export default function DiscoverPage() {
     // Feed Fetcher Effect
     useEffect(() => {
         if (geoError) {
+            posthog.capture("location_granted", { status: "denied", error: geoError });
             fetchGlobalRooms();
         } else if (coordinates) {
+            posthog.capture("location_granted", { status: "granted" });
             fetchNearbyRooms();
         }
     }, [coordinates, geoLoading, geoError, searchRadius]);

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, MapPin } from "lucide-react";
 import { api } from "@/lib/api";
+import { usePostHog } from 'posthog-js/react';
 
 interface CreateRoomModalProps {
     isOpen: boolean;
@@ -14,6 +15,7 @@ interface CreateRoomModalProps {
 }
 
 export function CreateRoomModal({ isOpen, onClose, onSuccess, currentLat, currentLng }: CreateRoomModalProps) {
+    const posthog = usePostHog();
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [interests, setInterests] = useState<string[]>([]);
@@ -67,6 +69,8 @@ export function CreateRoomModal({ isOpen, onClose, onSuccess, currentLat, curren
                 lng: currentLng,
                 interests
             });
+
+            posthog.capture("room_created", { interestsCount: interests.length });
 
             onSuccess();
             onClose();

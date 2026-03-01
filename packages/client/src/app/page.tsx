@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Globe, MessageSquare, Handshake, Play, ArrowRight, ShieldCheck, Zap } from "lucide-react";
+import { usePostHog } from 'posthog-js/react';
 
 export default function Home() {
+    const posthog = usePostHog();
     return (
         <div className="flex flex-col min-h-screen">
             {/* 1. Hero Section */}
@@ -155,6 +159,7 @@ export default function Home() {
                     <p className="text-xl text-muted mb-10">Join thousands of professionals already accelerating their careers through meaningful local connections.</p>
                     <Link
                         href="/auth"
+                        onClick={() => posthog.capture('waitlist_joined')}
                         className="inline-flex h-14 items-center justify-center rounded-full bg-primary px-10 text-base font-semibold text-white transition-all hover:bg-primary/90 hover:scale-105 shadow-xl shadow-primary/25"
                     >
                         Create Free Account

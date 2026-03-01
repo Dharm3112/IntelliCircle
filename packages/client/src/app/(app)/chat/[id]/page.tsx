@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Virtuoso } from "react-virtuoso";
 import toast from "react-hot-toast";
+import { usePostHog } from 'posthog-js/react';
 
 interface Message {
     id: number;
@@ -33,6 +34,7 @@ export default function ChatRoomPage() {
     const { isAuthenticated, user } = useAuthStore();
     const { connected, connecting, error, subscribe, sendMessage } = useSocket();
     const queryClient = useQueryClient();
+    const posthog = usePostHog();
 
     const [room, setRoom] = useState<RoomData | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -85,6 +87,7 @@ export default function ChatRoomPage() {
 
         // Ask the server to map this socket stream to the Postgres Room ID
         sendMessage("join_room", { roomId: Number(id) });
+        posthog.capture("room_joined", { roomId: Number(id) });
 
         const unsubscribe = subscribe((data: any) => {
             console.log("⬇️ FRONTEND RECEIVED WS:", data);
@@ -168,6 +171,7 @@ export default function ChatRoomPage() {
         console.log("📤 Sending message to WS Engine:", { roomId: Number(id), content: messageContent });
 
         sendMessage("send_message", { roomId: Number(id), content: messageContent });
+        posthog.capture("message_sent", { roomId: Number(id), messageLength: messageContent.length });
 
         // --- FIX: Optimistically add the message to your screen immediately ---
         const optimisticMsg = {

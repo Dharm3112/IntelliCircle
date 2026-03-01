@@ -5,6 +5,7 @@ import { reverseGeocode } from "../services/geocoding";
 import { createSuccessResponse, createErrorResponse } from "../utils/response";
 import { sql, eq, desc } from "drizzle-orm";
 import { messages } from "@intellicircle/shared";
+import { trackTiming } from "../utils/metrics";
 
 export async function roomRoutes(app: FastifyInstance) {
     // 1. Create a New Room with Location
@@ -72,20 +73,21 @@ export async function roomRoutes(app: FastifyInstance) {
             // Combine all where clauses dynamically
             const whereClause = sql.join(conditions, sql` AND `);
 
-            // Execute Query mapping distance for sorting
-            const nearbyRooms = await db.select({
-                id: chatRooms.id,
-                name: chatRooms.name,
-                description: chatRooms.description,
-                interests: chatRooms.interests,
-                createdAt: chatRooms.createdAt,
-                // Calculate distance from user in meters for the payload
-                distanceMeters: sql<number>`ST_Distance(location::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography)`
-            })
-                .from(chatRooms)
-                .where(whereClause)
-                .orderBy(sql`ST_Distance(location::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography) ASC`) // Sort by closest first
-                .limit(50); // Show top 50 matches
+            // Execute Query mapping distance for sorting, tracked via Datadog StatsD
+            const nearbyRooms = await trackTiming("db_query_time", async () => {
+                return db.select({
+                    id: chatRooms.id,
+                    name: chatRooms.name,
+                    description: chatRooms.description,
+                    interests: chatRooms.interests,
+                    createdAt: chatRooms.createdAt,
+                    distanceMeters: sql<number>`ST_Distance(location::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography)`
+                })
+                    .from(chatRooms)
+                    .where(whereClause)
+                    .orderBy(sql`ST_Distance(location::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography) ASC`)
+                    .limit(50);
+            }, ["query:nearby_rooms_search"]);
 
             return reply.status(200).send(createSuccessResponse({ rooms: nearbyRooms, searchRadius: radiusKm }));
         } catch (error) {

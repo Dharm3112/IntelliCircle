@@ -5,8 +5,9 @@ import { createPortal } from "react-dom";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
-import { User, LogIn, ArrowRight, Loader2 } from "lucide-react";
+import { LogIn, ArrowRight, Loader2, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePostHog } from 'posthog-js/react';
 
 export const AuthModal = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -14,6 +15,7 @@ export const AuthModal = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const posthog = usePostHog();
 
     const { isAuthenticated, user, setAuth, logout } = useAuthStore();
 
@@ -30,6 +32,14 @@ export const AuthModal = () => {
             const data = res.data as any;
             if (data.success) {
                 setAuth(data.data.accessToken, data.data.user);
+
+                // Track Conversion metric
+                posthog.capture("user_signed_up", { type: "anonymous" });
+                posthog.identify(data.data.user.id.toString(), {
+                    username: data.data.user.username,
+                    role: data.data.user.role
+                });
+
                 setIsOpen(false);
                 router.push("/discover");
             }

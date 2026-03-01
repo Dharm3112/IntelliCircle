@@ -7,6 +7,7 @@ import {
     text,
     integer,
     uniqueIndex,
+    index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -68,6 +69,11 @@ export const messages = pgTable("messages", {
     userId: integer("user_id").notNull(),
     content: text("content").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => {
+    return {
+        // Essential composite index for optimizing the `WHERE roomId = X ORDER BY createdAt DESC` query for room history hydration
+        roomHistoryIdx: index("message_room_created_idx").on(table.roomId, table.createdAt),
+    };
 });
 
 // --- Participants Table (Junction Table) ---

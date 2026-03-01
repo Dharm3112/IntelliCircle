@@ -14,6 +14,7 @@ import { Providers } from "../components/providers";
 import { Header } from "../components/header";
 import { Footer } from "../components/footer";
 import PageTransition from "../components/page-transition";
+import { CSPostHogProvider } from "@/components/posthog-provider";
 
 export default function RootLayout({
     children,
@@ -26,9 +27,9 @@ export default function RootLayout({
                 <Providers>
                     <Header />
                     <main className="pt-16 flex-grow flex flex-col">
-                        <PageTransition>
+                        <CSPostHogProvider>
                             {children}
-                        </PageTransition>
+                        </CSPostHogProvider>
                     </main>
                     <Footer />
                 </Providers>

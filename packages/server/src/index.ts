@@ -1,3 +1,4 @@
+import "dd-trace/init"; // Must be strictly the first import for APM instrumentation
 import { buildApp } from "./app";
 import { env } from "./config/env";
 

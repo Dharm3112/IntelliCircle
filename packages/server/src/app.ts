@@ -15,6 +15,8 @@ import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
 import fastifyCsrfProtection from "@fastify/csrf-protection";
 import fastifyWebsocket from "@fastify/websocket";
+import fastifyMultipart from "@fastify/multipart";
+import { getRedisClient } from "./db/redis";
 
 declare module "fastify" {
     export interface FastifyInstance {
@@ -25,8 +27,23 @@ declare module "fastify" {
 
 export const buildApp = async () => {
     const app = Fastify({
+        bodyLimit: 1048576, // 1MB payload limit globally to prevent buffer overflow attacks
         logger: {
             level: env.NODE_ENV === "production" ? "info" : "debug",
+            redact: {
+                paths: [
+                    'req.headers.authorization',
+                    'req.headers.cookie',
+                    'email',
+                    'password',
+                    'passwordHash',
+                    'token',
+                    'refreshToken',
+                    'accessToken',
+                    'content' // Redact exact message content from structured logs
+                ],
+                censor: '[REDACTED]'
+            },
             transport:
                 env.NODE_ENV !== "production"
                     ? {
@@ -53,10 +70,19 @@ export const buildApp = async () => {
         options: { maxPayload: 1048576 } // Restrict WS payload sizes to 1MB
     });
 
-    // Basic Rate Limiting
+    // Register Multipart for potential file uploads safely
+    await app.register(fastifyMultipart, {
+        limits: {
+            fileSize: 5242880, // 5MB limit
+            files: 1
+        }
+    });
+
+    // Advanced Rate Limiting over Redis
     await app.register(rateLimit, {
         max: 100,
         timeWindow: "1 minute",
+        redis: getRedisClient(),
     });
 
     // --- Auth Plugins ---

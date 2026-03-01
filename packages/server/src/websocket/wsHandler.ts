@@ -7,6 +7,7 @@ import { sql } from "drizzle-orm";
 import DOMPurify from "isomorphic-dompurify";
 import { getRedisClient } from "../db/redis";
 import { backgroundJobService } from "../services/queue";
+import { metrics } from "../utils/metrics";
 
 const wsIncomingMessageSchema = z.object({
     type: z.enum(["join_room", "send_message", "leave_room", "typing_start", "typing_stop"]),
@@ -79,6 +80,9 @@ export async function websocketRoutes(app: FastifyInstance) {
                 activeRooms: new Set(),
                 messageTimestamps: [],
             });
+
+            // Track active connection count globally inside APM
+            metrics.increment("active_ws_connections", 1, ["status:connected"]);
 
             // Acknowledge connection
             socket.send(JSON.stringify({ type: "connected", payload: { userId: decoded.id } }));
@@ -184,6 +188,8 @@ export async function websocketRoutes(app: FastifyInstance) {
                             content: sanitizedContent,
                         }).returning();
 
+                        metrics.increment("messages_per_minute", 1, [`room:${roomId}`]);
+
                         // 2. Broadcast via Redis to all nodes
                         const chatEvent = JSON.stringify({
                             type: "new_message",
@@ -243,6 +249,7 @@ export async function websocketRoutes(app: FastifyInstance) {
                     }
                 }
                 clients.delete(socket);
+                metrics.decrement("active_ws_connections", 1, ["status:disconnected"]);
             });
 
         } catch (jwtError) {
