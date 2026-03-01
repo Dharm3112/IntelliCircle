@@ -248,64 +248,63 @@ export default function ChatRoomPage() {
                             <span className="text-sm font-medium">Hydrating history...</span>
                         </div>
                     ) : (
-                        <div className="flex-1 relative w-full max-w-4xl mx-auto">
-                            <div className="absolute inset-0">
-                                <Virtuoso
-                                    data={messages}
-                                    initialTopMostItemIndex={messages.length > 0 ? messages.length - 1 : 0}
-                                    followOutput="smooth"
-                                    alignToBottom
-                                    className="h-full w-full px-4 lg:px-6 !overflow-x-hidden"
-                                    itemContent={(i, msg) => {
-                                        const isMe = msg.userId === user?.id;
+                        <div className="flex-1 w-full h-full min-h-0 max-w-4xl mx-auto flex flex-col overflow-hidden">
+                            <Virtuoso
+                                data={messages}
+                                initialTopMostItemIndex={messages.length > 0 ? messages.length - 1 : 0}
+                                followOutput="smooth"
+                                alignToBottom
+                                style={{ height: "100%", width: "100%" }}
+                                className="px-4 lg:px-6 !overflow-x-hidden"
+                                itemContent={(i, msg) => {
+                                    const isMe = msg.userId === user?.id;
 
-                                        return (
+                                    return (
+                                        <div
+                                            key={msg.id || `temp-${i}`}
+                                            className={`flex flex-col py-2 ${isMe ? 'items-end' : 'items-start'}`}
+                                        >
+                                            {!isMe && (
+                                                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1 ml-1">
+                                                    {msg.username || 'Anon'}
+                                                </span>
+                                            )}
                                             <div
-                                                key={msg.id || `temp-${i}`}
-                                                className={`flex flex-col py-2 ${isMe ? 'items-end' : 'items-start'}`}
+                                                className={`px-4 py-2.5 rounded-2xl max-w-[85%] ${isMe
+                                                    ? 'bg-indigo-600 text-white rounded-br-sm'
+                                                    : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-white/5'
+                                                    }`}
                                             >
-                                                {!isMe && (
-                                                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1 ml-1">
-                                                        {msg.username || 'Anon'}
-                                                    </span>
-                                                )}
-                                                <div
-                                                    className={`px-4 py-2.5 rounded-2xl max-w-[85%] ${isMe
-                                                        ? 'bg-indigo-600 text-white rounded-br-sm'
-                                                        : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-white/5'
-                                                        }`}
-                                                >
-                                                    <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
-                                                </div>
+                                                <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
                                             </div>
-                                        );
-                                    }}
-                                    components={{
-                                        Footer: () => (
-                                            <AnimatePresence>
-                                                {typingUsers.size > 0 && (
-                                                    <motion.div
-                                                        key="typing-indicator"
-                                                        initial={{ opacity: 0, y: 10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        exit={{ opacity: 0, y: 10 }}
-                                                        className="text-xs text-zinc-400 font-medium italic mt-2 ml-2 pb-4"
-                                                    >
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="flex gap-1 items-center">
-                                                                <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-                                                                <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-                                                                <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-                                                            </div>
-                                                            {Array.from(typingUsers).join(", ")} {typingUsers.size > 1 ? "are" : "is"} typing...
+                                        </div>
+                                    );
+                                }}
+                                components={{
+                                    Footer: () => (
+                                        <AnimatePresence>
+                                            {typingUsers.size > 0 && (
+                                                <motion.div
+                                                    key="typing-indicator"
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0, y: 10 }}
+                                                    className="text-xs text-zinc-400 font-medium italic mt-2 ml-2 pb-4"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex gap-1 items-center">
+                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
                                                         </div>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        )
-                                    }}
-                                />
-                            </div>
+                                                        {Array.from(typingUsers).join(", ")} {typingUsers.size > 1 ? "are" : "is"} typing...
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    )
+                                }}
+                            />
                         </div>
                     )}
                 </main>
@@ -377,7 +376,7 @@ export default function ChatRoomPage() {
                         </div>
                     </div>
                 </MobileDrawer>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
