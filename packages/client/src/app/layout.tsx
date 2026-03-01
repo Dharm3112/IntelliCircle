@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 
 import { Providers } from "../components/providers";
 import { Header } from "../components/header";
+import { Footer } from "../components/footer";
 import PageTransition from "../components/page-transition";
 
 export default function RootLayout({
@@ -21,14 +22,15 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans`}>
+            <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans min-h-screen flex flex-col`}>
                 <Providers>
                     <Header />
-                    <main className="pt-16 min-h-screen flex flex-col">
+                    <main className="pt-16 flex-grow flex flex-col">
                         <PageTransition>
                             {children}
                         </PageTransition>
                     </main>
+                    <Footer />
                 </Providers>
             </body>
         </html>
