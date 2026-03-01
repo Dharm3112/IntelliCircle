@@ -44,6 +44,12 @@ export default function ChatRoomPage() {
     const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isTypingRef = useRef(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll logic
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages, typingUsers.size]);
 
     // Initial Gate
     useEffect(() => {
@@ -149,9 +155,24 @@ export default function ChatRoomPage() {
             return;
         }
 
-        console.log("📤 Sending message to WS Engine:", { roomId: Number(id), content: input.trim() });
-        sendMessage("send_message", { roomId: Number(id), content: input.trim() });
-        setInput(""); // Optimistic clear, true add happens via WS bounceback to prevent duplication
+        const messageContent = input.trim();
+        console.log("📤 Sending message to WS Engine:", { roomId: Number(id), content: messageContent });
+
+        sendMessage("send_message", { roomId: Number(id), content: messageContent });
+
+        // --- FIX: Optimistically add the message to your screen immediately ---
+        const optimisticMsg = {
+            id: Date.now(), // Temporary ID
+            userId: user?.id || 0,
+            username: user?.username || "You",
+            content: messageContent,
+            createdAt: new Date().toISOString()
+        };
+
+        setMessages(prev => [...prev, optimisticMsg]);
+        // ----------------------------------------------------------------------
+
+        setInput(""); // Optimistic clear
 
         // Immediately halt typing indicator
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -248,15 +269,9 @@ export default function ChatRoomPage() {
                             <span className="text-sm font-medium">Hydrating history...</span>
                         </div>
                     ) : (
-                        <div className="flex-1 w-full h-full min-h-0 max-w-4xl mx-auto flex flex-col overflow-hidden">
-                            <Virtuoso
-                                data={messages}
-                                initialTopMostItemIndex={messages.length > 0 ? messages.length - 1 : 0}
-                                followOutput="smooth"
-                                alignToBottom
-                                style={{ height: "100%", width: "100%" }}
-                                className="px-4 lg:px-6 !overflow-x-hidden"
-                                itemContent={(i, msg) => {
+                        <div className="flex-1 w-full h-full min-h-0 max-w-4xl mx-auto flex flex-col overflow-y-auto px-4 lg:px-6 scroll-smooth">
+                            <div className="flex flex-col gap-1 mt-auto pb-4 w-full">
+                                {messages.map((msg, i) => {
                                     const isMe = msg.userId === user?.id;
 
                                     return (
@@ -279,32 +294,30 @@ export default function ChatRoomPage() {
                                             </div>
                                         </div>
                                     );
-                                }}
-                                components={{
-                                    Footer: () => (
-                                        <AnimatePresence>
-                                            {typingUsers.size > 0 && (
-                                                <motion.div
-                                                    key="typing-indicator"
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: 10 }}
-                                                    className="text-xs text-zinc-400 font-medium italic mt-2 ml-2 pb-4"
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex gap-1 items-center">
-                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-                                                        </div>
-                                                        {Array.from(typingUsers).join(", ")} {typingUsers.size > 1 ? "are" : "is"} typing...
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    )
-                                }}
-                            />
+                                })}
+
+                                <AnimatePresence>
+                                    {typingUsers.size > 0 && (
+                                        <motion.div
+                                            key="typing-indicator"
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            className="text-xs text-zinc-400 font-medium italic mt-2 ml-2 pb-4"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex gap-1 items-center">
+                                                    <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                    <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                    <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                </div>
+                                                {Array.from(typingUsers).join(", ")} {typingUsers.size > 1 ? "are" : "is"} typing...
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                                <div ref={messagesEndRef} className="h-1" />
+                            </div>
                         </div>
                     )}
                 </main>

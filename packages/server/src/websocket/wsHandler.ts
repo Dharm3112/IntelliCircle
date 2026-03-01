@@ -35,9 +35,10 @@ interface ConnectedClient {
 // Global registry linking raw Sockets to identified users
 const clients = new Map<any, ConnectedClient>();
 
-export async function websocketRoutes(app: FastifyInstance) {
-    const { publisher, subscriber } = getPubSubClients();
+// Hoist Redis clients globally so the listener and sockets share the same memory instance
+const { publisher, subscriber } = getPubSubClients();
 
+export async function websocketRoutes(app: FastifyInstance) {
     // Redis Subscriber Handler: When a message hits a Redis Channel, pump it out to all local Fastify Sockets subscribed to that room
     subscriber.on("message", (channel, message) => {
         const [prefix, roomIdStr] = channel.split(":");
