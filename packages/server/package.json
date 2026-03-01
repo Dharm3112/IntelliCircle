@@ -8,6 +8,7 @@
     "worker": "tsx watch src/worker.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:worker": "node dist/worker.js",
     "db:push": "dotenv drizzle-kit push",
     "db:generate": "dotenv drizzle-kit generate",
     "db:enable-postgis": "dotenv tsx src/db/enable-postgis.ts",

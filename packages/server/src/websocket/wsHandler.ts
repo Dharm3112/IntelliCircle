@@ -141,10 +141,20 @@ export async function websocketRoutes(app: FastifyInstance) {
                             timestamp: new Date().toISOString() // Or metadata
                         }));
                     } else {
+                        // Tell client we are looking for a summary
+                        socket.send(JSON.stringify({
+                            type: "room_summary_pending",
+                            timestamp: new Date().toISOString()
+                        }));
+
                         // If there is no summary, fire a job to the background worker to create one.
                         // It will use PubSub when finished to deliver the summary to anyone in the room.
-                        backgroundJobService.dispatchSummarizeRoom(roomId).catch(err => {
+                        backgroundJobService.dispatchSummarizeRoom(roomId).catch(async err => {
                             app.log.error({ err, roomId }, "Failed to dispatch AI summarize job");
+                            await publisher.publish(`room:${roomId}`, JSON.stringify({
+                                type: "room_summary_unavailable",
+                                timestamp: new Date().toISOString()
+                            }));
                         });
                     }
                 }

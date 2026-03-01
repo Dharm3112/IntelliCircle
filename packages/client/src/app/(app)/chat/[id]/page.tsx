@@ -37,6 +37,7 @@ export default function ChatRoomPage() {
     const [room, setRoom] = useState<RoomData | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [roomSummary, setRoomSummary] = useState<string | null>(null);
+    const [summaryStatus, setSummaryStatus] = useState<"idle" | "pending" | "ready" | "unavailable">("idle");
     const [input, setInput] = useState("");
     const [participants, setParticipants] = useState<any[]>([]);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -122,6 +123,11 @@ export default function ChatRoomPage() {
                 }
             } else if (data.type === "room_summary_update") {
                 setRoomSummary(data.content);
+                setSummaryStatus("ready");
+            } else if (data.type === "room_summary_pending") {
+                setSummaryStatus("pending");
+            } else if (data.type === "room_summary_unavailable") {
+                setSummaryStatus("unavailable");
             } else if (data.type === "error") {
                 toast.error(data.message || "Network Error");
             }
@@ -274,18 +280,33 @@ export default function ChatRoomPage() {
                     ) : (
                         <div className="flex-1 w-full h-full min-h-0 max-w-4xl mx-auto flex flex-col overflow-y-auto px-4 lg:px-6 scroll-smooth">
                             <div className="flex flex-col gap-1 mt-auto pb-4 w-full pt-4">
-                                {roomSummary && (
-                                    <div className="mb-6 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 shadow-lg backdrop-blur-md relative overflow-hidden group">
+                                {summaryStatus === "pending" && (
+                                    <div className="mb-6 p-4 rounded-xl bg-zinc-900/50 border border-white/5 shadow-lg backdrop-blur-md relative overflow-hidden flex gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 animate-pulse">
+                                            <Sparkles className="w-4 h-4 text-zinc-500" />
+                                        </div>
+                                        <div className="flex-1 space-y-2 mt-1">
+                                            <div className="h-3 w-1/4 bg-white/10 rounded animate-pulse"></div>
+                                            <div className="space-y-1.5">
+                                                <div className="h-2 w-full bg-white/5 rounded animate-pulse"></div>
+                                                <div className="h-2 w-5/6 bg-white/5 rounded animate-pulse"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {summaryStatus === "ready" && roomSummary && (
+                                    <div className="mb-6 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 shadow-lg backdrop-blur-md relative overflow-hidden group hover:border-indigo-500/40 transition-colors">
                                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
                                         <div className="flex gap-3 relative z-10">
                                             <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center shrink-0">
                                                 <Sparkles className="w-4 h-4 text-indigo-400" />
                                             </div>
                                             <div>
-                                                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-400 mb-1 flex items-center gap-2">
+                                                <h4 className="text-[11px] font-bold uppercase tracking-wider text-indigo-400 mb-1 flex items-center gap-2">
                                                     AI Context Summary
                                                 </h4>
-                                                <p className="text-sm text-zinc-300 leading-relaxed">
+                                                <p className="text-sm text-zinc-300 leading-relaxed font-medium">
                                                     {roomSummary}
                                                 </p>
                                             </div>

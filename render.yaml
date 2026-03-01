@@ -12,6 +12,26 @@ services:
           property: connectionString
       - key: NODE_ENV
         value: production
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=512" # Web tier needs more headroom
+
+  - type: worker
+    name: intellicircle-worker
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "npm run start:worker -w @intellicircle/server"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: intellicircle-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=256" # Worker tier constrained memory limit
+      - key: GEMINI_API_KEY
+        sync: false # Must be set securely in the Render dashboard, not in source.
 
 databases:
   - name: intellicircle-db
