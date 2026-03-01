@@ -26,7 +26,11 @@ export const useAuthStore = create<AuthState>()(
         }),
         {
             name: "intellicircle-auth", // unique name for local storage key
-            partialize: (state) => ({ user: state.user, accessToken: state.accessToken }), // Only persist these fields
+            partialize: (state) => ({
+                user: state.user,
+                accessToken: state.accessToken,
+                isAuthenticated: state.isAuthenticated
+            }), // Only persist these fields
         }
     )
 );

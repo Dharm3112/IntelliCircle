@@ -39,7 +39,13 @@ export default function DiscoverPage() {
                     radiusKm: searchRadius
                 }
             });
-            setRooms((res.data as any).data.rooms || []);
+            const nearby = (res.data as any).data.rooms || [];
+            if (nearby.length === 0) {
+                const globalRes = await api.get(`/rooms/global`);
+                setRooms((globalRes.data as any).data.rooms || []);
+            } else {
+                setRooms(nearby);
+            }
         } catch (error) {
             console.error("Failed to fetch nearby rooms", error);
         } finally {

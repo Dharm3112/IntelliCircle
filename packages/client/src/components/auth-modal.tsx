@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { User, LogIn, ArrowRight, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +12,7 @@ export const AuthModal = () => {
     const [username, setUsername] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const router = useRouter();
 
     const { isAuthenticated, user, setAuth, logout } = useAuthStore();
 
@@ -25,9 +27,21 @@ export const AuthModal = () => {
             if (data.success) {
                 setAuth(data.data.accessToken, data.data.user);
                 setIsOpen(false);
+                router.push("/discover");
             }
         } catch (error: any) {
-            setError(error.response?.data?.message || "Failed to authenticate. Please try again.");
+            const apiError = error.response?.data?.error;
+            let errorMsg = apiError?.message || error.message || "Failed to authenticate. Please try again.";
+
+            if (apiError?.code === "VALIDATION_ERROR" && apiError?.details) {
+                const firstDetail = Object.values(apiError.details).find((v: any) => v && v._errors?.length > 0) as any;
+                if (firstDetail && firstDetail._errors[0]) {
+                    errorMsg = firstDetail._errors[0];
+                } else if (apiError.details._errors?.length > 0) {
+                    errorMsg = apiError.details._errors[0];
+                }
+            }
+            setError(errorMsg);
         } finally {
             setIsLoading(false);
         }

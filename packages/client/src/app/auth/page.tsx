@@ -58,7 +58,20 @@ export default function AuthPage() {
                 }
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || err.message || "Authentication failed");
+            const apiError = err.response?.data?.error;
+            let errorMsg = apiError?.message || err.message || "Authentication failed";
+
+            // Extract specific Zod validation details if present
+            if (apiError?.code === "VALIDATION_ERROR" && apiError?.details) {
+                const firstDetail = Object.values(apiError.details).find((v: any) => v && v._errors?.length > 0) as any;
+                if (firstDetail && firstDetail._errors[0]) {
+                    errorMsg = firstDetail._errors[0];
+                } else if (apiError.details._errors?.length > 0) {
+                    errorMsg = apiError.details._errors[0];
+                }
+            }
+
+            setError(errorMsg);
         } finally {
             setIsLoading(false);
         }

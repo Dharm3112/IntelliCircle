@@ -229,7 +229,7 @@ export default function ChatRoomPage() {
                             <span className="text-sm font-medium">Hydrating history...</span>
                         </div>
                     ) : (
-                        <div className="flex-1 w-full max-w-4xl mx-auto">
+                        <div className="flex-1 w-full h-full min-h-0 max-w-4xl mx-auto">
                             <Virtuoso
                                 data={messages}
                                 initialTopMostItemIndex={messages.length > 0 ? messages.length - 1 : 0}

@@ -34,7 +34,7 @@ export function MobileDrawer({ isOpen, onClose, children, title }: MobileDrawerP
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden"
+                        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm md:hidden"
                     />
 
                     {/* Drawer */}
@@ -43,7 +43,7 @@ export function MobileDrawer({ isOpen, onClose, children, title }: MobileDrawerP
                         animate={{ x: 0 }}
                         exit={{ x: "-100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="fixed inset-y-0 left-0 z-50 w-4/5 max-w-sm bg-zinc-950 border-r border-white/10 shadow-2xl md:hidden flex flex-col"
+                        className="fixed inset-y-0 left-0 z-[100] w-4/5 max-w-sm bg-zinc-950 border-r border-white/10 shadow-2xl md:hidden flex flex-col"
                     >
                         <div className="flex items-center justify-between p-4 border-b border-white/10">
                             <span className="font-bold tracking-tight text-white">{title || "Menu"}</span>
