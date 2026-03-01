@@ -1,14 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 import { AuthModal } from "./auth-modal";
 import { UpgradeAccountModal } from "./upgrade-modal";
 import { MobileDrawer } from "./mobile-drawer";
 
 export function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const { isAuthenticated, user, logout } = useAuthStore();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const navLinks = [
         { name: "Discover", href: "/discover" },
@@ -47,8 +54,27 @@ export function Header() {
 
                     <div className="flex items-center gap-4">
                         <div className="hidden md:flex items-center gap-4">
-                            <UpgradeAccountModal />
-                            <AuthModal />
+                            {mounted && isAuthenticated && user ? (
+                                <div className="flex items-center gap-4">
+                                    <Link href="/profile" className="flex items-center gap-2 group">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-primary flex items-center justify-center text-sm font-bold text-white shadow-md border border-[#27272a] group-hover:border-primary/50 transition-colors overflow-hidden">
+                                            {user.avatar ? (
+                                                <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                                            ) : (
+                                                user.username.charAt(0).toUpperCase()
+                                            )}
+                                        </div>
+                                        <span className="text-sm font-medium text-white group-hover:text-primary transition-colors">
+                                            {user.username}
+                                        </span>
+                                    </Link>
+                                </div>
+                            ) : (
+                                <>
+                                    <UpgradeAccountModal />
+                                    <AuthModal />
+                                </>
+                            )}
                         </div>
 
                         {/* Mobile Menu Toggle */}
@@ -81,8 +107,23 @@ export function Header() {
                         </Link>
                     ))}
                     <div className="flex flex-col gap-3 mt-4">
-                        <UpgradeAccountModal />
-                        <AuthModal />
+                        {mounted && isAuthenticated && user ? (
+                            <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-colors">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-primary flex items-center justify-center text-lg font-bold text-white shadow-md border border-[#27272a] overflow-hidden">
+                                    {user.avatar ? (
+                                        <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                                    ) : (
+                                        user.username.charAt(0).toUpperCase()
+                                    )}
+                                </div>
+                                <span>{user.username}</span>
+                            </Link>
+                        ) : (
+                            <>
+                                <UpgradeAccountModal />
+                                <AuthModal />
+                            </>
+                        )}
                     </div>
                 </div>
             </MobileDrawer>

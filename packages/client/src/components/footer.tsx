@@ -67,8 +67,8 @@ export function Footer() {
                             </a>
                         </div>
                         <ul className="flex flex-col gap-2">
-                            <li><a href="#" className="text-muted hover:text-white transition-colors text-sm">Privacy Policy</a></li>
-                            <li><a href="#" className="text-muted hover:text-white transition-colors text-sm">Terms of Service</a></li>
+                            <li><Link href="/privacy" className="text-muted hover:text-white transition-colors text-sm">Privacy Policy</Link></li>
+                            <li><Link href="/terms" className="text-muted hover:text-white transition-colors text-sm">Terms of Service</Link></li>
                         </ul>
                     </div>
                 </div>
