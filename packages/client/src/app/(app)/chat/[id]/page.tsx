@@ -10,6 +10,7 @@ import { MobileDrawer } from "@/components/mobile-drawer";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Virtuoso } from "react-virtuoso";
+import toast from "react-hot-toast";
 
 interface Message {
     id: number;
@@ -42,10 +43,15 @@ export default function ChatRoomPage() {
     // Typing indicator states
     const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isTypingRef = useRef(false);
 
     // Initial Gate
     useEffect(() => {
         if (!isAuthenticated) router.push("/auth");
+
+        // Lock body completely to prevent any rogue scrollbars
+        document.body.style.overflow = "hidden";
+        return () => { document.body.style.overflow = "auto"; };
     }, [isAuthenticated, router]);
 
     // Initial Hydration
@@ -73,6 +79,7 @@ export default function ChatRoomPage() {
         sendMessage("join_room", { roomId: Number(id) });
 
         const unsubscribe = subscribe((data: any) => {
+            console.log("⬇️ FRONTEND RECEIVED WS:", data);
             if (data.type === "new_message") {
                 // Sync the incoming WS message straight into the TanStack cache
                 queryClient.setQueryData(["roomHistory", id], (old: any) => {
@@ -106,6 +113,8 @@ export default function ChatRoomPage() {
                         return next;
                     });
                 }
+            } else if (data.type === "error") {
+                toast.error(data.message || "Network Error");
             }
         });
 
@@ -116,34 +125,44 @@ export default function ChatRoomPage() {
         setInput(e.target.value);
         if (!connected) return;
 
-        // Broadcast we are typing
-        sendMessage("typing_start", { roomId: Number(id) });
+        // Broadcast we are typing (throttled)
+        if (!isTypingRef.current) {
+            isTypingRef.current = true;
+            sendMessage("typing_start", { roomId: Number(id) });
+        }
 
         // Clear existing debounce
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
         // Stop typing indicator after 1 second of inactivity
         typingTimeoutRef.current = setTimeout(() => {
+            isTypingRef.current = false;
             sendMessage("typing_stop", { roomId: Number(id) });
         }, 1000);
     };
 
     const handleSend = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim() || !connected) return;
+        console.log("🚀 SEND HIT!", { input: input.trim(), connected });
+        if (!input.trim() || !connected) {
+            console.log("❌ REJECTED ALGORITHM!");
+            return;
+        }
 
+        console.log("📤 Sending message to WS Engine:", { roomId: Number(id), content: input.trim() });
         sendMessage("send_message", { roomId: Number(id), content: input.trim() });
         setInput(""); // Optimistic clear, true add happens via WS bounceback to prevent duplication
 
         // Immediately halt typing indicator
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        isTypingRef.current = false;
         sendMessage("typing_stop", { roomId: Number(id) });
     };
 
     if (!isAuthenticated) return null;
 
     return (
-        <div className="flex h-screen bg-black text-white overflow-hidden">
+        <div className="flex h-[calc(100dvh-4rem)] w-full bg-black text-white overflow-hidden">
 
             {/* LEFT SIDEBAR - Room Info */}
             <aside className="w-80 border-r border-white/10 bg-zinc-950 flex flex-col hidden md:flex shrink-0">
@@ -185,7 +204,7 @@ export default function ChatRoomPage() {
                 </div>
             </aside>
 
-            <div className="flex-1 flex flex-col relative w-full h-full">
+            <div className="flex-1 flex flex-col relative h-full min-w-0">
                 {/* Header */}
                 <header className="shrink-0 h-16 border-b border-white/10 bg-zinc-900/50 flex items-center justify-between px-4 lg:px-6 z-10 backdrop-blur-md">
                     <div className="flex items-center gap-4">
@@ -229,61 +248,64 @@ export default function ChatRoomPage() {
                             <span className="text-sm font-medium">Hydrating history...</span>
                         </div>
                     ) : (
-                        <div className="flex-1 w-full h-full min-h-0 max-w-4xl mx-auto">
-                            <Virtuoso
-                                data={messages}
-                                initialTopMostItemIndex={messages.length > 0 ? messages.length - 1 : 0}
-                                followOutput={(isAtBottom: boolean) => (isAtBottom ? "smooth" : false)}
-                                className="h-full w-full px-4 lg:px-6"
-                                itemContent={(i, msg) => {
-                                    const isMe = msg.userId === user?.id;
+                        <div className="flex-1 relative w-full max-w-4xl mx-auto">
+                            <div className="absolute inset-0">
+                                <Virtuoso
+                                    data={messages}
+                                    initialTopMostItemIndex={messages.length > 0 ? messages.length - 1 : 0}
+                                    followOutput="smooth"
+                                    alignToBottom
+                                    className="h-full w-full px-4 lg:px-6 !overflow-x-hidden"
+                                    itemContent={(i, msg) => {
+                                        const isMe = msg.userId === user?.id;
 
-                                    return (
-                                        <div
-                                            key={msg.id || `temp-${i}`}
-                                            className={`flex flex-col py-2 ${isMe ? 'items-end' : 'items-start'}`}
-                                        >
-                                            {!isMe && (
-                                                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1 ml-1">
-                                                    {msg.username || 'Anon'}
-                                                </span>
-                                            )}
+                                        return (
                                             <div
-                                                className={`px-4 py-2.5 rounded-2xl max-w-[85%] ${isMe
-                                                    ? 'bg-indigo-600 text-white rounded-br-sm'
-                                                    : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-white/5'
-                                                    }`}
+                                                key={msg.id || `temp-${i}`}
+                                                className={`flex flex-col py-2 ${isMe ? 'items-end' : 'items-start'}`}
                                             >
-                                                <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
-                                            </div>
-                                        </div>
-                                    );
-                                }}
-                                components={{
-                                    Footer: () => (
-                                        <AnimatePresence>
-                                            {typingUsers.size > 0 && (
-                                                <motion.div
-                                                    key="typing-indicator"
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: 10 }}
-                                                    className="text-xs text-zinc-400 font-medium italic mt-2 ml-2 pb-4"
+                                                {!isMe && (
+                                                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider mb-1 ml-1">
+                                                        {msg.username || 'Anon'}
+                                                    </span>
+                                                )}
+                                                <div
+                                                    className={`px-4 py-2.5 rounded-2xl max-w-[85%] ${isMe
+                                                        ? 'bg-indigo-600 text-white rounded-br-sm'
+                                                        : 'bg-zinc-800 text-zinc-200 rounded-bl-sm border border-white/5'
+                                                        }`}
                                                 >
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex gap-1 items-center">
-                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
-                                                            <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                    <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    }}
+                                    components={{
+                                        Footer: () => (
+                                            <AnimatePresence>
+                                                {typingUsers.size > 0 && (
+                                                    <motion.div
+                                                        key="typing-indicator"
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: 10 }}
+                                                        className="text-xs text-zinc-400 font-medium italic mt-2 ml-2 pb-4"
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="flex gap-1 items-center">
+                                                                <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                                <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                                <motion.div animate={{ y: [0, -3, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-zinc-500 rounded-full" />
+                                                            </div>
+                                                            {Array.from(typingUsers).join(", ")} {typingUsers.size > 1 ? "are" : "is"} typing...
                                                         </div>
-                                                        {Array.from(typingUsers).join(", ")} {typingUsers.size > 1 ? "are" : "is"} typing...
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    )
-                                }}
-                            />
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        )
+                                    }}
+                                />
+                            </div>
                         </div>
                     )}
                 </main>

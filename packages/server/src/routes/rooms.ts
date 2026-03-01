@@ -28,7 +28,7 @@ export async function roomRoutes(app: FastifyInstance) {
                 name,
                 description,
                 interests,
-                location: locationPoint as any, // Bypass strict type check for now until drizzle natively supports inserting into custom geometries
+                location: { x: lng, y: lat } as any,
                 // We're dynamically adding a region string column next migration to hold OpenCage result. 
                 // Currently just making sure the spatial bounds store.
             }).returning();
@@ -84,7 +84,7 @@ export async function roomRoutes(app: FastifyInstance) {
             })
                 .from(chatRooms)
                 .where(whereClause)
-                .orderBy(sql`distanceMeters ASC`) // Sort by closest first
+                .orderBy(sql`ST_Distance(location::geography, ST_SetSRID(ST_MakePoint(${lng}, ${lat}), 4326)::geography) ASC`) // Sort by closest first
                 .limit(50); // Show top 50 matches
 
             return reply.status(200).send(createSuccessResponse({ rooms: nearbyRooms, searchRadius: radiusKm }));

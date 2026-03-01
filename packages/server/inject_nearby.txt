@@ -1,0 +1,63 @@
+[dotenv@17.3.1] injecting env (5) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[dotenv@17.3.1] injecting env (2) from .env.keys -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[05:44:50 UTC] [32mINFO[39m: [36mincoming request[39m
+    [35mreqId[39m: "req-1"
+    [35mreq[39m: {
+      "method": "POST",
+      "url": "/api/auth/anonymous",
+      "host": "localhost:80",
+      "remoteAddress": "127.0.0.1"
+    }
+[05:44:50 UTC] [32mINFO[39m: [36m🟢 Redis Client Connected[39m
+[05:44:52 UTC] [32mINFO[39m: [36mrequest completed[39m
+    [35mreqId[39m: "req-1"
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 2107.371099948883
+[05:44:52 UTC] [32mINFO[39m: [36mincoming request[39m
+    [35mreqId[39m: "req-2"
+    [35mreq[39m: {
+      "method": "GET",
+      "url": "/api/rooms/nearby?lat=40.7128&lng=-74.0060&radiusKm=50",
+      "host": "localhost:80",
+      "remoteAddress": "127.0.0.1"
+    }
+Nearby Route Output: {"data":null,"error":{"message":"Failed to discover nearby rooms"}}
+[05:44:53 UTC] [31mERROR[39m: [36mFailed query: select "id", "name", "description", "interests", "created_at", ST_Distance(location::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) from "chatRooms" where ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint($3, $4), 4326)::geography, $5) AND is_active = 1 order by distanceMeters ASC limit $6
+params: -74.006,40.7128,-74.006,40.7128,50000,50[39m
+    err: {
+      "type": "DrizzleQueryError",
+      "message": "Failed query: select \"id\", \"name\", \"description\", \"interests\", \"created_at\", ST_Distance(location::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) from \"chatRooms\" where ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint($3, $4), 4326)::geography, $5) AND is_active = 1 order by distanceMeters ASC limit $6\nparams: -74.006,40.7128,-74.006,40.7128,50000,50: column \"distancemeters\" does not exist",
+      "stack":
+          Error: Failed query: select "id", "name", "description", "interests", "created_at", ST_Distance(location::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) from "chatRooms" where ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint($3, $4), 4326)::geography, $5) AND is_active = 1 order by distanceMeters ASC limit $6
+          params: -74.006,40.7128,-74.006,40.7128,50000,50
+              at PostgresJsPreparedQuery.queryWithCache (C:\Users\Dharm\PycharmProjects\IntelliCircle\node_modules\src\pg-core\session.ts:73:11)
+              at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+              at async <anonymous> (C:\Users\Dharm\PycharmProjects\IntelliCircle\node_modules\src\postgres-js\session.ts:58:17)
+              at async Object.<anonymous> (C:\Users\Dharm\PycharmProjects\IntelliCircle\packages\server\src\routes\rooms.ts:76:33)
+          caused by: PostgresError: column "distancemeters" does not exist
+              at ErrorResponse (C:\Users\Dharm\PycharmProjects\IntelliCircle\node_modules\postgres\cjs\src\connection.js:815:30)
+              at handle (C:\Users\Dharm\PycharmProjects\IntelliCircle\node_modules\postgres\cjs\src\connection.js:489:6)
+              at TLSSocket.data (C:\Users\Dharm\PycharmProjects\IntelliCircle\node_modules\postgres\cjs\src\connection.js:324:9)
+              at TLSSocket.emit (node:events:519:28)
+              at addChunk (node:internal/streams/readable:561:12)
+              at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+              at Readable.push (node:internal/streams/readable:392:5)
+              at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+      "query": "select \"id\", \"name\", \"description\", \"interests\", \"created_at\", ST_Distance(location::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) from \"chatRooms\" where ST_DWithin(location::geography, ST_SetSRID(ST_MakePoint($3, $4), 4326)::geography, $5) AND is_active = 1 order by distanceMeters ASC limit $6",
+      "params": [
+        -74.006,
+        40.7128,
+        -74.006,
+        40.7128,
+        50000,
+        50
+      ]
+    }
+[05:44:53 UTC] [32mINFO[39m: [36mrequest completed[39m
+    [35mreqId[39m: "req-2"
+    [35mres[39m: {
+      "statusCode": 500
+    }
+    [35mresponseTime[39m: 675.9069999456406

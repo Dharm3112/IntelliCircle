@@ -1,0 +1,122 @@
+[dotenv@17.3.1] injecting env (5) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.3.1] injecting env (2) from .env.keys -- tip: ⚙️  suppress all logs with { quiet: true }
+[05:43:26 UTC] [32mINFO[39m: [36m🟢 Redis Client Connected[39m
+DB Rooms Count: 7
+DB Rooms: [
+  {
+    "id": 9,
+    "name": "NYC Tech Enthusiasts",
+    "description": "Local tech meetups and info in New York",
+    "location": "0101000020E6100000AAF1D24D628052C05E4BC8073D5B4440",
+    "interests": [
+      "tech",
+      "startups",
+      "nyc"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-28T15:19:11.673Z"
+  },
+  {
+    "id": 10,
+    "name": "SF Developers Hub",
+    "description": "Bay area software engineering chat",
+    "location": "0101000020E610000050FC1873D79A5EC0D0D556EC2FE34240",
+    "interests": [
+      "software",
+      "engineering",
+      "sf",
+      "sv"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-28T15:19:11.673Z"
+  },
+  {
+    "id": 11,
+    "name": "London FinTech",
+    "description": "Discussions surrounding financial technology in London",
+    "location": "0101000020E6100000DA1B7C613255C0BFFE43FAEDEBC04940",
+    "interests": [
+      "finance",
+      "tech",
+      "london"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-28T15:19:11.673Z"
+  },
+  {
+    "id": 12,
+    "name": "Software Developer ",
+    "description": "All Are Welcomed ",
+    "location": "0101000020E61000006710523271275240A7DDFC8398FA3640",
+    "interests": [
+      "it",
+      "cs"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-28T15:21:25.521Z"
+  },
+  {
+    "id": 13,
+    "name": "Software Developer ",
+    "description": "All Are Welcomed",
+    "location": "0101000020E610000018B8A662712752401260417A99FA3640",
+    "interests": [
+      "it",
+      "cs"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-28T15:23:41.380Z"
+  },
+  {
+    "id": 14,
+    "name": "HUU",
+    "description": "siuh",
+    "location": "0101000020E6100000A16651FD70275240B56183D09CFA3640",
+    "interests": [
+      "it"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-28T15:27:42.936Z"
+  },
+  {
+    "id": 15,
+    "name": "HOI",
+    "description": "srgrd",
+    "location": "0101000020E610000000F1D82E712752403797C6329CFA3640",
+    "interests": [
+      "it",
+      "cd"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-03-01T04:08:05.419Z"
+  }
+]
+[05:43:27 UTC] [32mINFO[39m: [36mincoming request[39m
+    [35mreqId[39m: "req-1"
+    [35mreq[39m: {
+      "method": "POST",
+      "url": "/api/auth/anonymous",
+      "host": "localhost:80",
+      "remoteAddress": "127.0.0.1"
+    }
+[05:43:27 UTC] [32mINFO[39m: [36mrequest completed[39m
+    [35mreqId[39m: "req-1"
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 171.62550008296967
+[05:43:27 UTC] [32mINFO[39m: [36mincoming request[39m
+    [35mreqId[39m: "req-2"
+    [35mreq[39m: {
+      "method": "GET",
+      "url": "/api/rooms/global",
+      "host": "localhost:80",
+      "remoteAddress": "127.0.0.1"
+    }
+Global Route Output: {"data":{"rooms":[{"id":15,"name":"HOI","description":"srgrd","interests":["it","cd"],"createdAt":"2026-03-01T04:08:05.419Z"},{"id":14,"name":"HUU","description":"siuh","interests":["it"],"createdAt":"2026-02-28T15:27:42.936Z"},{"id":13,"name":"Software Developer ","description":"All Are Welcomed","interests":["it","cs"],"createdAt":"2026-02-28T15:23:41.380Z"},{"id":12,"name":"Software Developer ","description":"All Are Welcomed ","interests":["it","cs"],"createdAt":"2026-02-28T15:21:25.521Z"},{"id":9,"name":"NYC Tech Enthusiasts","description":"Local tech meetups and info in New York","interests":["tech","startups","nyc"],"createdAt":"2026-02-28T15:19:11.673Z"},{"id":11,"name":"London FinTech","description":"Discussions surrounding financial technology in London","interests":["finance","tech","london"],"createdAt":"2026-02-28T15:19:11.673Z"},{"id":10,"name":"SF Developers Hub","description":"Bay area software engineering chat","interests":["software","engineering","sf","sv"],"createdAt":"2026-02-28T15:19:11.673Z"}],"searchRadius":"Global"},"error":null}
+[05:43:27 UTC] [32mINFO[39m: [36mrequest completed[39m
+    [35mreqId[39m: "req-2"
+    [35mres[39m: {
+      "statusCode": 200
+    }
+    [35mresponseTime[39m: 153.60109996795654

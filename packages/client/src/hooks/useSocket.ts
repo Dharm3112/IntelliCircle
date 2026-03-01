@@ -31,8 +31,15 @@ export function useSocket() {
 
         setSocketState(prev => ({ ...prev, connecting: true, error: null }));
 
-        // Pass JWT over standard WSS URI since standard `new WebSocket` does not support custom headers
-        const wsUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace("http", "ws") || "ws://localhost:8080"}/ws?token=${accessToken}`;
+        // Use dedicated WS URL, or mathematically derive it by stripping /api from the HTTP URL
+        const baseHttp = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081/api";
+        let wsBase = process.env.NEXT_PUBLIC_WS_URL || baseHttp.replace("http", "ws").replace("/api", "");
+
+        // Windows Chrome natively prefers [::1] IPv6 for localhost which crashes against Fastify IPv4 loops
+        wsBase = wsBase.replace("localhost", "127.0.0.1");
+
+        const wsUrl = `${wsBase}/ws?token=${accessToken}`;
+
         const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
