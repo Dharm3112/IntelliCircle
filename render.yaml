@@ -19,26 +19,6 @@ services:
       - key: NEXT_PUBLIC_POSTHOG_KEY
         sync: false # Set securely in Render Dashboard
 
-  - type: worker
-    name: intellicircle-worker
-    env: node
-    plan: free
-    buildCommand: "npm install"
-    startCommand: "npm run start:worker -w @intellicircle/server"
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: intellicircle-db
-          property: connectionString
-      - key: NODE_ENV
-        value: production
-      - key: NODE_OPTIONS
-        value: "--max-old-space-size=256" # Worker tier constrained memory limit
-      - key: GEMINI_API_KEY
-        sync: false # Must be set securely in the Render dashboard, not in source.
-      - key: DATADOG_API_KEY
-        sync: false # Set securely in Render Dashboard
-
 databases:
   - name: intellicircle-db
     plan: free
