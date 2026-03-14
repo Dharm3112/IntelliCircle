@@ -64,35 +64,241 @@ High-throughput, real-time processing engine.
 
 ```text
 IntelliCircle/
-├── package.json               # Root monorepo workspace definition
-├── README.md                  # This documentation
-├── PRD.md                     # Product Requirements
-├── Design Doc.md              # UX & Design Philosophy
-├── Tech Stack.md              # Technical Architecture details
-│
-├── packages/
-│   ├── client/                # Next.js 14 Frontend Application
-│   │   ├── src/
-│   │   │   ├── app/           # Next.js App Router (/(app)/chat, /auth, /discover)
-│   │   │   ├── components/    # Reusable UI (Radix Primitives, ChatBubbles)
-│   │   │   ├── hooks/         # Custom React hooks (useSocket, useGeolocation)
-│   │   │   ├── lib/           # Axios singletons and generic utilities
-│   │   │   └── store/         # Zustand authentication & session store
-│   │   └── tailwind.config.ts # Global theme definitions
-│   │
-│   ├── server/                # Fastify Node.js Backend API
-│   │   ├── src/
-│   │   │   ├── config/        # Environment validation (Env Zod Schemas)
-│   │   │   ├── db/            # Drizzle configuration and seed scripts
-│   │   │   ├── routes/        # Fastify REST endpoints (Auth, Waitlist, Rooms)
-│   │   │   ├── services/      # 3rd party modules (OpenCage API, Gemini 2.5)
-│   │   │   ├── websocket/     # Real-time message handlers & Redis Adapters
-│   │   │   └── worker.ts      # BullMQ background worker ingest process
-│   │   └── drizzle.config.ts  # Database migration configuration
-│   │
-│   └── shared/                # Universal Cross-Platform Logic
-│       └── src/
-│           └── schema.ts      # Single-Source-of-Truth DB queries & Zod schemas
+├── .env
+├── .gitignore
+├── .nvmrc
+├── .replit
+├── Design Doc.md
+├── LICENSE
+├── PRD.md
+├── README.md
+├── TODO.md
+├── Tech Stack.md
+├── deploy.md
+├── docker-compose.yml
+├── drizzle.config.ts
+├── generate-keys.js
+├── generated-icon.png
+├── legacy
+│   ├── client
+│   │   ├── index.html
+│   │   └── src
+│   │       ├── App.tsx
+│   │       ├── components
+│   │       │   ├── ui
+│   │       │   │   ├── accordion.tsx
+│   │       │   │   ├── alert-dialog.tsx
+│   │       │   │   ├── alert.tsx
+│   │       │   │   ├── aspect-ratio.tsx
+│   │       │   │   ├── avatar.tsx
+│   │       │   │   ├── badge.tsx
+│   │       │   │   ├── breadcrumb.tsx
+│   │       │   │   ├── button.tsx
+│   │       │   │   ├── calendar.tsx
+│   │       │   │   ├── card.tsx
+│   │       │   │   ├── carousel.tsx
+│   │       │   │   ├── chart.tsx
+│   │       │   │   ├── checkbox.tsx
+│   │       │   │   ├── collapsible.tsx
+│   │       │   │   ├── command.tsx
+│   │       │   │   ├── context-menu.tsx
+│   │       │   │   ├── dialog.tsx
+│   │       │   │   ├── drawer.tsx
+│   │       │   │   ├── dropdown-menu.tsx
+│   │       │   │   ├── form.tsx
+│   │       │   │   ├── hover-card.tsx
+│   │       │   │   ├── input-otp.tsx
+│   │       │   │   ├── input.tsx
+│   │       │   │   ├── label.tsx
+│   │       │   │   ├── menubar.tsx
+│   │       │   │   ├── navigation-menu.tsx
+│   │       │   │   ├── pagination.tsx
+│   │       │   │   ├── popover.tsx
+│   │       │   │   ├── progress.tsx
+│   │       │   │   ├── radio-group.tsx
+│   │       │   │   ├── resizable.tsx
+│   │       │   │   ├── scroll-area.tsx
+│   │       │   │   ├── select.tsx
+│   │       │   │   ├── separator.tsx
+│   │       │   │   ├── sheet.tsx
+│   │       │   │   ├── sidebar.tsx
+│   │       │   │   ├── skeleton.tsx
+│   │       │   │   ├── slider.tsx
+│   │       │   │   ├── switch.tsx
+│   │       │   │   ├── table.tsx
+│   │       │   │   ├── tabs.tsx
+│   │       │   │   ├── textarea.tsx
+│   │       │   │   ├── toast.tsx
+│   │       │   │   ├── toaster.tsx
+│   │       │   │   ├── toggle-group.tsx
+│   │       │   │   ├── toggle.tsx
+│   │       │   │   └── tooltip.tsx
+│   │       │   └── waitlist-form.tsx
+│   │       ├── hooks
+│   │       │   ├── use-mobile.tsx
+│   │       │   └── use-toast.ts
+│   │       ├── index.css
+│   │       ├── lib
+│   │       │   ├── queryClient.ts
+│   │       │   └── utils.ts
+│   │       ├── main.tsx
+│   │       └── pages
+│   │           ├── chat.tsx
+│   │           ├── discover.tsx
+│   │           ├── home.tsx
+│   │           ├── not-found.tsx
+│   │           └── profile.tsx
+│   ├── server
+│   │   ├── db.ts
+│   │   ├── index.ts
+│   │   ├── routes.ts
+│   │   ├── storage.ts
+│   │   └── vite.ts
+│   └── shared
+│       └── schema.ts
+├── netlify.toml
+├── package-lock.json
+├── package.json
+├── packages
+│   ├── client
+│   │   ├── lint.log
+│   │   ├── next-env.d.ts
+│   │   ├── next.config.mjs
+│   │   ├── package.json
+│   │   ├── postcss.config.js
+│   │   ├── src
+│   │   │   ├── app
+│   │   │   │   ├── (app)
+│   │   │   │   │   ├── chat
+│   │   │   │   │   │   ├── [id]
+│   │   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── dashboard
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── discover
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── profile
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── (marketing)
+│   │   │   │   │   ├── about
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── contact
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── privacy
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── terms
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   └── waitlist
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── auth
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── globals.css
+│   │   │   │   ├── layout.tsx
+│   │   │   │   ├── not-found.tsx
+│   │   │   │   └── page.tsx
+│   │   │   ├── components
+│   │   │   │   ├── CreateRoomModal.tsx
+│   │   │   │   ├── auth-modal.tsx
+│   │   │   │   ├── footer.tsx
+│   │   │   │   ├── header.tsx
+│   │   │   │   ├── mobile-drawer.tsx
+│   │   │   │   ├── page-transition.tsx
+│   │   │   │   ├── posthog-provider.tsx
+│   │   │   │   ├── providers.tsx
+│   │   │   │   └── upgrade-modal.tsx
+│   │   │   ├── hooks
+│   │   │   │   ├── useGeolocation.ts
+│   │   │   │   └── useSocket.ts
+│   │   │   ├── lib
+│   │   │   │   ├── api.ts
+│   │   │   │   └── utils.ts
+│   │   │   ├── middleware.ts
+│   │   │   └── store
+│   │   │       ├── authStore.ts
+│   │   │       └── index.ts
+│   │   ├── tailwind.config.ts
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.tsbuildinfo
+│   │   └── typescript-errors.log
+│   ├── server
+│   │   ├── .env
+│   │   ├── .env.keys
+│   │   ├── Dockerfile
+│   │   ├── check-logs.ts
+│   │   ├── check_db.ts
+│   │   ├── drizzle.config.ts
+│   │   ├── inject_nearby.txt
+│   │   ├── inject_nearby_fixed.txt
+│   │   ├── inject_out.txt
+│   │   ├── migrations
+│   │   │   ├── 0000_fantastic_shriek.sql
+│   │   │   ├── 0001_youthful_ser_duncan.sql
+│   │   │   ├── 0002_steady_xavin.sql
+│   │   │   └── meta
+│   │   │       ├── 0000_snapshot.json
+│   │   │       ├── 0001_snapshot.json
+│   │   │       ├── 0002_snapshot.json
+│   │   │       └── _journal.json
+│   │   ├── package.json
+│   │   ├── src
+│   │   │   ├── app.ts
+│   │   │   ├── config
+│   │   │   │   └── env.ts
+│   │   │   ├── db
+│   │   │   │   ├── enable-postgis.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── redis.ts
+│   │   │   │   ├── run-migrations.ts
+│   │   │   │   └── seed.ts
+│   │   │   ├── index.ts
+│   │   │   ├── jobs
+│   │   │   │   ├── deadRoomCleanup.ts
+│   │   │   │   └── summarizeRoom.ts
+│   │   │   ├── plugins
+│   │   │   ├── routes
+│   │   │   │   ├── auth.ts
+│   │   │   │   ├── health.ts
+│   │   │   │   ├── rooms.ts
+│   │   │   │   ├── test-db.ts
+│   │   │   │   └── waitlist.ts
+│   │   │   ├── services
+│   │   │   │   ├── geocoding.ts
+│   │   │   │   └── queue.ts
+│   │   │   ├── test_inject.ts
+│   │   │   ├── utils
+│   │   │   │   ├── auth.ts
+│   │   │   │   ├── logger.ts
+│   │   │   │   ├── metrics.ts
+│   │   │   │   └── response.ts
+│   │   │   ├── websocket
+│   │   │   │   ├── pubsub.ts
+│   │   │   │   └── wsHandler.ts
+│   │   │   └── worker.ts
+│   │   ├── test_inject.ts
+│   │   ├── test_ws.ts
+│   │   └── tsconfig.json
+│   └── shared
+│       ├── package.json
+│       ├── src
+│       │   ├── index.d.ts
+│       │   ├── index.js
+│       │   ├── index.ts
+│       │   ├── schema.d.ts
+│       │   ├── schema.js
+│       │   └── schema.ts
+│       ├── test_schema.ts
+│       ├── test_zod_bug.ts
+│       └── tsconfig.json
+├── postcss.config.js
+├── real_tree.txt
+├── render.yaml
+├── replit.md
+├── tailwind.config.ts
+├── test_api.js
+├── theme.json
+├── tree.txt
+├── tsconfig.json
+└── vite.config.ts
 ```
 
 ---
