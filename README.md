@@ -64,21 +64,6 @@ High-throughput, real-time processing engine.
 
 ```text
 IntelliCircle/
-├── .env
-├── .gitignore
-├── .nvmrc
-├── .replit
-├── Design Doc.md
-├── LICENSE
-├── PRD.md
-├── README.md
-├── TODO.md
-├── Tech Stack.md
-├── deploy.md
-├── docker-compose.yml
-├── drizzle.config.ts
-├── generate-keys.js
-├── generated-icon.png
 ├── legacy
 │   ├── client
 │   │   ├── index.html
@@ -156,9 +141,6 @@ IntelliCircle/
 │   │   └── vite.ts
 │   └── shared
 │       └── schema.ts
-├── netlify.toml
-├── package-lock.json
-├── package.json
 ├── packages
 │   ├── client
 │   │   ├── lint.log
@@ -289,14 +271,26 @@ IntelliCircle/
 │       ├── test_schema.ts
 │       ├── test_zod_bug.ts
 │       └── tsconfig.json
+├── .env
+├── .gitignore
+├── .nvmrc
+├── .replit
+├── LICENSE
+├── README.md
+├── deploy.md
+├── netlify.toml
+├── package-lock.json
+├── package.json
+├── docker-compose.yml
+├── drizzle.config.ts
+├── generate-keys.js
+├── generated-icon.png
 ├── postcss.config.js
-├── real_tree.txt
 ├── render.yaml
 ├── replit.md
 ├── tailwind.config.ts
 ├── test_api.js
 ├── theme.json
-├── tree.txt
 ├── tsconfig.json
 └── vite.config.ts
 ```
