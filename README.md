@@ -271,10 +271,10 @@ IntelliCircle/
 │       ├── test_schema.ts
 │       ├── test_zod_bug.ts
 │       └── tsconfig.json
-├── .env
+├── .env.example
 ├── .gitignore
 ├── .nvmrc
-├── .replit
+├── CONTRIBUTING.md
 ├── LICENSE
 ├── README.md
 ├── deploy.md

@@ -22,6 +22,8 @@ packages/*/dist
 # misc
 .DS_Store
 *.pem
+
+# logs
 *.log
 
 # debug
@@ -30,12 +32,21 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local env files
-.env*.local
+# local env files — never commit real secrets
 .env
+.env.local
+.env*.local
 .env.development
 .env.production
 .env.keys
+
+# debug / scratch output files
+inject_*.txt
+tree.txt
+
+# ad-hoc test scripts (proper tests live in __tests__/)
+test_*.js
+test_*.ts
 
 # vercel
 .vercel
@@ -44,7 +55,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Required Documents 
+# Replit
+.replit
+replit.md
+
+# Required Documents (private project docs)
 Tech Stack.md
 Problem Statement.md
 Design Doc.md
