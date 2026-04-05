@@ -83,10 +83,13 @@ Before the app can work, you need to create the tables inside your new Render Po
    ```bash
    npm run db:push -w @intellicircle/server
    ```
-5. *(Optional)* If you want to seed the database with initial fake data for testing:
+5. **CRITICAL:** Solve the "Cold Start" problem by seeding global virtual rooms:
    ```bash
-   npm run seed -w @intellicircle/server
+   npm run seed:production -w @intellicircle/server
    ```
+
+> For advanced recovery, failures during deployment, or lost data, refer to our [Disaster Recovery Runbook](docs/disaster-recovery-runbook.md) and our [Production Checklist](docs/production-checklist.md).
+
 
 ---
 

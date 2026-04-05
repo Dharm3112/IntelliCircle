@@ -28,5 +28,11 @@ jobs:
     - name: Build Shared
       run: npm run build -w @intellicircle/shared
 
+    - name: Build Server
+      run: npm run build -w @intellicircle/server
+
+    - name: Build Client
+      run: npm run build -w @intellicircle/client
+
     - name: Type Check & Lint
       run: npm run check

@@ -12,7 +12,8 @@
     "db:push": "dotenv drizzle-kit push",
     "db:generate": "dotenv drizzle-kit generate",
     "db:enable-postgis": "dotenv tsx src/db/enable-postgis.ts",
-    "seed": "dotenv tsx src/db/seed.ts"
+    "seed": "dotenv tsx src/db/seed.ts",
+    "seed:production": "dotenv tsx src/db/seed-production.ts"
   },
   "keywords": [],
   "author": "",

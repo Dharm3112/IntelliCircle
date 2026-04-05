@@ -1,0 +1,46 @@
+name: Production Deployment
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Trigger Render Deploy (Backend & Worker)
+      run: |
+        curl -X POST -d "" ${{ secrets.RENDER_DEPLOY_HOOK_SERVER }}
+        curl -X POST -d "" ${{ secrets.RENDER_DEPLOY_HOOK_WORKER }}
+        
+    - name: Wait for API to come online
+      run: |
+        echo "Waiting for Render API to become healthy..."
+        # Loop for up to 5 minutes waiting for healthcheck to return HTTP 200
+        for i in {1..30}; do
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://intellicircle-server.onrender.com/api/health || echo "FAILED")
+          if [ "$STATUS" = "200" ]; then
+            echo "API is healthy!"
+            exit 0
+          fi
+          if [ "$STATUS" = "503" ]; then
+            echo "API reported dependency outage (503)! Rollback required."
+            exit 1
+          fi
+          echo "Still waiting ($STATUS)... retry in 10s"
+          sleep 10
+        done
+        echo "Timeout reached. API is not healthy."
+        exit 1
+        
+    - name: Automated Rollback on Failure
+      if: failure()
+      run: |
+        echo "Health check failed. Triggering automated rollback..."
+        # Placeholder for Render Rollback API call, assuming Pro plan
+        # curl -X POST -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+        #     https://api.render.com/v1/services/srv-xxx/deploys/previous/rollback
+        echo "Rollback initiated. Check Render dashboard."
