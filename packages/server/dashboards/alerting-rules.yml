@@ -1,0 +1,130 @@
+# IntelliCircle – Alerting Rules Configuration
+# ─────────────────────────────────────────────
+# These rules define thresholds for Datadog Monitors or Grafana Alerting.
+# Each rule specifies the metric, condition, severity, and notification channel.
+#
+# Severity Levels:
+#   - INFO: Logged for awareness, no paging
+#   - WARN: Posts to #ops-alerts Slack channel
+#   - PAGE: Triggers PagerDuty/Opsgenie incident
+
+alerts:
+  # ─── API Latency ───────────────────────────────────────────────────────────
+  - name: "High API Latency (P95)"
+    metric: "intellicircle.http_request_duration_ms"
+    aggregation: "p95"
+    condition: "> 500"
+    unit: "ms"
+    window: "5m"
+    severity: PAGE
+    description: >
+      P95 API latency has exceeded 500ms for 5 consecutive minutes.
+      This indicates degraded user experience. Check for:
+      - Database query slowdowns (EXPLAIN ANALYZE on PostGIS queries)
+      - Redis connection pool saturation
+      - Event loop blocking (check event_loop_lag_ms metrics)
+    runbook: "https://wiki.internal/runbooks/high-api-latency"
+    notify:
+      - channel: pagerduty
+      - channel: slack
+        target: "#ops-alerts"
+
+  # ─── 5xx Error Rate ────────────────────────────────────────────────────────
+  - name: "High 5xx Error Rate"
+    metric: "intellicircle.http_5xx_errors / intellicircle.http_request_duration_ms.count"
+    aggregation: "ratio"
+    condition: "> 0.05"
+    unit: "ratio (5%)"
+    window: "5m"
+    severity: PAGE
+    description: >
+      More than 5% of HTTP requests returned 5xx status codes in the last
+      5-minute window. This suggests systemic backend failure.
+      Immediate investigation required.
+    runbook: "https://wiki.internal/runbooks/5xx-spike"
+    notify:
+      - channel: pagerduty
+      - channel: slack
+        target: "#ops-alerts"
+
+  # ─── Event Loop Lag ────────────────────────────────────────────────────────
+  - name: "Event Loop Lag Warning"
+    metric: "intellicircle.event_loop_lag_ms.p99"
+    aggregation: "avg"
+    condition: "> 100"
+    unit: "ms"
+    window: "5m"
+    severity: WARN
+    description: >
+      P99 event loop lag exceeds 100ms. Node.js is spending significant
+      time blocked. Check for synchronous CPU work, large JSON parsing,
+      or unoptimized database queries.
+    notify:
+      - channel: slack
+        target: "#ops-alerts"
+
+  - name: "Event Loop Lag Critical"
+    metric: "intellicircle.event_loop_lag_ms.p99"
+    aggregation: "avg"
+    condition: "> 500"
+    unit: "ms"
+    window: "3m"
+    severity: PAGE
+    description: >
+      P99 event loop lag exceeds 500ms for 3 minutes. The server is
+      severely degraded. WebSocket heartbeats will fail, causing mass
+      client disconnections.
+    runbook: "https://wiki.internal/runbooks/event-loop-critical"
+    notify:
+      - channel: pagerduty
+      - channel: slack
+        target: "#ops-alerts"
+
+  # ─── Redis Memory ──────────────────────────────────────────────────────────
+  - name: "Redis Memory Warning"
+    metric: "intellicircle.redis_memory_usage_percent"
+    aggregation: "avg"
+    condition: "> 80"
+    unit: "percent"
+    window: "10m"
+    severity: WARN
+    description: >
+      Redis is using more than 80% of configured maxmemory.
+      Consider scaling the Redis instance or investigating cache bloat.
+      Check for stale Pub/Sub channels or unbounded key growth.
+    notify:
+      - channel: slack
+        target: "#ops-alerts"
+
+  - name: "Redis Memory Critical"
+    metric: "intellicircle.redis_memory_usage_percent"
+    aggregation: "avg"
+    condition: "> 95"
+    unit: "percent"
+    window: "5m"
+    severity: PAGE
+    description: >
+      Redis is at 95%+ memory capacity. OOM eviction is imminent.
+      Keys will be dropped according to the eviction policy, potentially
+      causing session loss and BullMQ job failures.
+    runbook: "https://wiki.internal/runbooks/redis-oom"
+    notify:
+      - channel: pagerduty
+      - channel: slack
+        target: "#ops-alerts"
+
+  # ─── Capacity Planning ─────────────────────────────────────────────────────
+  - name: "High WebSocket Connection Count"
+    metric: "intellicircle.active_ws_connections"
+    aggregation: "sum"
+    condition: "> 5000"
+    unit: "connections"
+    window: "5m"
+    severity: INFO
+    description: >
+      More than 5,000 concurrent WebSocket connections are active.
+      This is an informational alert for capacity planning. Consider
+      scaling horizontally if this trend continues.
+    notify:
+      - channel: slack
+        target: "#ops-capacity"

@@ -1,10 +1,25 @@
+# ─── IntelliCircle Render Deployment Configuration ────────────────────────────
+# render.yaml – Infrastructure-as-Code for Render.com
+#
+# Service Architecture:
+#   1. intellicircle-server (Web Tier) – Fastify HTTP + WebSocket server
+#   2. intellicircle-worker (Worker Tier) – BullMQ background job processor
+#   3. intellicircle-db (PostgreSQL) – Primary database with PostGIS
+#
+# Auto-Scaling Notes:
+#   Render's free plan does not support auto-scaling. The configuration below
+#   documents the recommended scaling policies for when the project upgrades
+#   to the Starter or Pro plan. Uncomment the `scaling` blocks when ready.
+
 services:
+  # ─── Web Tier: Fastify HTTP + WebSocket Server ─────────────────────────────
   - type: web
     name: intellicircle-server
-    env: node
-    plan: free
-    buildCommand: "npm install"
-    startCommand: "npm run start"
+    runtime: node
+    plan: free  # Upgrade to 'starter' for auto-scaling support
+    buildCommand: "npm install && npm run build -w @intellicircle/shared && npm run build -w @intellicircle/server"
+    startCommand: "npm run start -w @intellicircle/server"
+    healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -13,17 +28,31 @@ services:
       - key: NODE_ENV
         value: production
       - key: NODE_OPTIONS
-        value: "--max-old-space-size=512" # Web tier needs more headroom
+        value: "--max-old-space-size=512"  # Web tier needs headroom for WS connections
       - key: DATADOG_API_KEY
-        sync: false # Set securely in Render Dashboard
+        sync: false  # Set securely in Render Dashboard
       - key: NEXT_PUBLIC_POSTHOG_KEY
-        sync: false # Set securely in Render Dashboard
+        sync: false  # Set securely in Render Dashboard
 
+    # ─── Auto-Scaling Configuration (Uncomment on Starter+ Plan) ─────────
+    # scaling:
+    #   minInstances: 1
+    #   maxInstances: 3
+    #   targetMemoryPercent: 80     # Scale up when memory exceeds 80%
+    #   targetCPUPercent: 70        # Scale up when CPU exceeds 70%
+    #
+    # Scaling rationale:
+    # - Each Node.js instance can handle ~2,000 concurrent WS connections
+    # - 3 instances × 2,000 = 6,000 max concurrent (exceeds 5,000 target)
+    # - Memory-based scaling catches connection count growth
+    # - CPU-based scaling catches JSON parse / crypto (JWT) load
+
+  # ─── Worker Tier: BullMQ Background Job Processor ──────────────────────────
   - type: web
     name: intellicircle-worker
-    env: node
+    runtime: node
     plan: free
-    buildCommand: "npm install"
+    buildCommand: "npm install && npm run build -w @intellicircle/shared && npm run build -w @intellicircle/server"
     startCommand: "npm run start:worker -w @intellicircle/server"
     envVars:
       - key: DATABASE_URL
@@ -33,13 +62,31 @@ services:
       - key: NODE_ENV
         value: production
       - key: NODE_OPTIONS
-        value: "--max-old-space-size=256" # Worker tier constrained memory limit
+        value: "--max-old-space-size=512"  # Increased from 256 for sustained BullMQ load
+      - key: REDIS_URL
+        sync: false  # Upstash Redis URL set in Render Dashboard
       - key: GEMINI_API_KEY
-        sync: false # Must be set securely in the Render dashboard, not in source.
+        sync: false  # Must be set securely in the Render dashboard
       - key: DATADOG_API_KEY
-        sync: false # Set securely in Render Dashboard
+        sync: false  # Set securely in Render Dashboard
+
+    # ─── Worker Scaling (Uncomment on Starter+ Plan) ─────────────────────
+    # scaling:
+    #   minInstances: 1
+    #   maxInstances: 2
+    #   targetMemoryPercent: 85
+    #   targetCPUPercent: 80
+    #
+    # Worker scaling is less aggressive than web tier because:
+    # - BullMQ concurrency is set to 5 (server/src/worker.ts)
+    # - CPU spikes are brief (Gemini API calls are I/O-bound)
+    # - 2 workers × 5 concurrency = 10 parallel jobs max
 
 databases:
   - name: intellicircle-db
     plan: free
-    
+    # Upgrade to 'starter' for:
+    # - Automated daily backups
+    # - Point-in-time recovery (PITR)
+    # - Higher connection limits (50+)
+    # postgresMajorVersion: 15

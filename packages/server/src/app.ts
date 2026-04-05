@@ -4,6 +4,8 @@ import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import { env } from "./config/env";
 import { logger } from "./utils/logger";
+import { metrics } from "./utils/metrics";
+import { buildLoggerTransport } from "./utils/pino-datadog-transport";
 import { createErrorResponse, createSuccessResponse } from "./utils/response";
 import { healthRoutes } from "./routes/health";
 import { dbTestRoutes } from "./routes/test-db";
@@ -32,29 +34,27 @@ export const buildApp = async () => {
             level: env.NODE_ENV === "production" ? "info" : "debug",
             redact: {
                 paths: [
+                    // Auth & Session tokens
                     'req.headers.authorization',
                     'req.headers.cookie',
-                    'email',
-                    'password',
-                    'passwordHash',
+                    'req.query.token', // WS handshake JWT passed as query param
                     'token',
                     'refreshToken',
                     'accessToken',
+                    // User PII fields
+                    'email',
+                    'req.body.email',
+                    'password',
+                    'passwordHash',
+                    'fullName',
+                    'req.body.fullName',
+                    'ipAddress',
+                    // User-generated content
                     'content' // Redact exact message content from structured logs
                 ],
                 censor: '[REDACTED]'
             },
-            transport:
-                env.NODE_ENV !== "production"
-                    ? {
-                        target: "pino-pretty",
-                        options: {
-                            colorize: true,
-                            translateTime: "HH:MM:ss Z",
-                            ignore: "pid,hostname",
-                        },
-                    }
-                    : undefined,
+            transport: buildLoggerTransport(env.NODE_ENV),
         },
     });
 
@@ -143,6 +143,29 @@ export const buildApp = async () => {
     app.register(roomRoutes, { prefix: "/api/rooms" });
     app.register(waitlistRoutes, { prefix: "/api/waitlist" });
     app.register(websocketRoutes, { prefix: "/ws" });
+
+    // --- Observability: Per-Route HTTP Latency Tracking ---
+    app.addHook('onResponse', (request, reply, done) => {
+        // Fastify provides response time natively via reply.elapsedTime
+        const responseTime = reply.elapsedTime;
+        const routeUrl = request.routeOptions?.url || request.url;
+        const method = request.method;
+        const statusCode = reply.statusCode;
+
+        metrics.histogram('http_request_duration_ms', responseTime, [
+            `route:${method}:${routeUrl}`,
+            `status:${statusCode}`,
+        ]);
+
+        // Track 5xx errors as a separate counter for alerting
+        if (statusCode >= 500) {
+            metrics.increment('http_5xx_errors', 1, [
+                `route:${method}:${routeUrl}`,
+            ]);
+        }
+
+        done();
+    });
 
     // --- Global Error Handler ---
     app.setErrorHandler((error: FastifyError, request, reply) => {

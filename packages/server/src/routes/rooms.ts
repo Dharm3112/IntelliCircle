@@ -119,6 +119,10 @@ export async function roomRoutes(app: FastifyInstance) {
     });
 
     // 4. Get Room History (Hydrate chat before WS takes over)
+    // Expected query plan (with message_room_created_idx):
+    //   Index Scan Backward using message_room_created_idx on messages
+    //   Index Cond: (room_id = $1)
+    //   Limit: 50
     app.get("/:id/history", { preValidation: [app.authenticate] }, async (request, reply) => {
         const _id = (request.params as { id: string }).id;
         const roomId = parseInt(_id, 10);
@@ -135,16 +139,16 @@ export async function roomRoutes(app: FastifyInstance) {
 
             if (!roomDef) return reply.status(404).send(createErrorResponse("Room not found"));
 
-            // Fetch Top 50 latest messages
-            const history = await db.select({
-                id: messages.id,
-                userId: messages.userId,
-                roomId: messages.roomId,
-                content: messages.content,
-                createdAt: messages.createdAt,
-                // Note: Ideally join users table here to get username if needed, 
-                // but WS pushes `username` dynamically. For now, rely on `userId`.
-            }).from(messages).where(eq(messages.roomId, roomId)).orderBy(desc(messages.createdAt)).limit(50);
+            // Fetch Top 50 latest messages, tracked via Datadog StatsD
+            const history = await trackTiming("db_query_time", async () => {
+                return db.select({
+                    id: messages.id,
+                    userId: messages.userId,
+                    roomId: messages.roomId,
+                    content: messages.content,
+                    createdAt: messages.createdAt,
+                }).from(messages).where(eq(messages.roomId, roomId)).orderBy(desc(messages.createdAt)).limit(50);
+            }, ["query:room_history_hydration"]);
 
             // Reverse to chronological order for React Feed
             return reply.send(createSuccessResponse({

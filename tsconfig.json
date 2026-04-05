@@ -32,10 +32,10 @@
     ],
     "paths": {
       "@/*": [
-        "./client/src/*"
+        "./packages/client/src/*"
       ],
       "@shared/*": [
-        "./shared/*"
+        "./packages/shared/*"
       ]
     }
   }

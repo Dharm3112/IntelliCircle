@@ -3,6 +3,7 @@
 import posthog from 'posthog-js';
 import { PostHogProvider } from 'posthog-js/react';
 import React, { useEffect } from 'react';
+import { reportWebVitals } from '@/lib/web-vitals';
 
 // Safely initialize PostHog avoiding SSR crashes if env is missing
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
@@ -18,5 +19,10 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
 }
 
 export function CSPostHogProvider({ children }: { children: React.ReactNode }) {
+    // Initialize Web Vitals reporting after the provider mounts on the client
+    useEffect(() => {
+        reportWebVitals();
+    }, []);
+
     return <PostHogProvider client={posthog}>{children}</PostHogProvider>;
 }

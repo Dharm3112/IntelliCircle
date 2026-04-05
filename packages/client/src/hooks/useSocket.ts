@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuthStore } from "@/store/authStore";
+import { analytics } from "@/lib/analytics";
 
 interface SocketState {
     connected: boolean;
@@ -121,6 +122,14 @@ export function useSocket() {
     const sendMessage = useCallback((type: string, payload: any) => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
             wsRef.current.send(JSON.stringify({ type, payload }));
+
+            // --- Product KPI Event Emission ---
+            if (type === 'join_room' && payload?.roomId) {
+                analytics.roomJoined(payload.roomId);
+            } else if (type === 'send_message' && payload?.roomId) {
+                analytics.messageSent(payload.roomId);
+            }
+
             return true;
         }
         return false;

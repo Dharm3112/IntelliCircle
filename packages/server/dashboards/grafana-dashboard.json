@@ -1,0 +1,230 @@
+{
+  "__metadata": {
+    "description": "IntelliCircle Observability Dashboard - Grafana JSON Model",
+    "version": "1.0.0",
+    "datasource": "Datadog",
+    "instructions": "Import this JSON file via Grafana UI: Dashboards → Import → Upload JSON file. Ensure the Datadog data source is configured in Grafana before importing."
+  },
+  "dashboard": {
+    "id": null,
+    "uid": "intellicircle-observability",
+    "title": "IntelliCircle – Observability & KPI Dashboard",
+    "tags": ["intellicircle", "production", "observability"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Node.js Event Loop Lag (ms)",
+        "description": "P50, P95, P99 of event loop delay sampled every 10s. High values indicate the main thread is blocked by CPU-bound work.",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          {
+            "query": "avg:intellicircle.event_loop_lag_ms.p50{env:production}",
+            "alias": "p50"
+          },
+          {
+            "query": "avg:intellicircle.event_loop_lag_ms.p95{env:production}",
+            "alias": "p95"
+          },
+          {
+            "query": "avg:intellicircle.event_loop_lag_ms.p99{env:production}",
+            "alias": "p99"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 50, "color": "yellow" },
+                { "value": 100, "color": "orange" },
+                { "value": 500, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Redis Memory Usage",
+        "description": "Tracks used_memory_bytes reported by Redis INFO. Rising trends may indicate cache bloat or Pub/Sub message backlog.",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          {
+            "query": "avg:intellicircle.redis_used_memory_bytes{env:production}",
+            "alias": "Used Memory (bytes)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 268435456, "color": "yellow" },
+                { "value": 536870912, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Active WebSocket Connections",
+        "description": "Live count of active WebSocket connections across all server instances.",
+        "type": "stat",
+        "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+        "targets": [
+          {
+            "query": "sum:intellicircle.active_ws_connections{env:production}",
+            "alias": "Active Connections"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "blue" },
+                { "value": 1000, "color": "green" },
+                { "value": 5000, "color": "yellow" },
+                { "value": 10000, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Messages Per Minute",
+        "description": "Rate of chat messages being sent across all rooms. Correlates with user engagement (DAU-C).",
+        "type": "timeseries",
+        "gridPos": { "h": 4, "w": 6, "x": 6, "y": 8 },
+        "targets": [
+          {
+            "query": "sum:intellicircle.messages_per_minute{env:production}.as_rate()",
+            "alias": "Messages/min"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "msg/min"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "HTTP Request Duration by Route (p95)",
+        "description": "P95 latency for each API route. Routes consistently above 500ms should be investigated.",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+        "targets": [
+          {
+            "query": "p95:intellicircle.http_request_duration_ms{env:production} by {route}",
+            "alias": "{{route}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 200, "color": "yellow" },
+                { "value": 500, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "5xx Error Rate",
+        "description": "Count of HTTP 5xx server errors per minute. Alert threshold: >5% of total requests.",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+        "targets": [
+          {
+            "query": "sum:intellicircle.http_5xx_errors{env:production}.as_count()",
+            "alias": "5xx Errors"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "errors/min",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 5, "color": "yellow" },
+                { "value": 20, "color": "red" }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 7,
+        "title": "Database Query Time (Spatial Search)",
+        "description": "Histogram of PostGIS spatial query execution times. Measured via trackTiming wrapper on nearby_rooms_search.",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+        "targets": [
+          {
+            "query": "avg:intellicircle.db_query_time{env:production,query:nearby_rooms_search}",
+            "alias": "Avg Query Time"
+          },
+          {
+            "query": "p95:intellicircle.db_query_time{env:production,query:nearby_rooms_search}",
+            "alias": "P95 Query Time"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Redis Memory Usage %",
+        "description": "Percentage of Redis maxmemory consumed. Critical for detecting memory exhaustion before OOM eviction kicks in.",
+        "type": "gauge",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+        "targets": [
+          {
+            "query": "avg:intellicircle.redis_memory_usage_percent{env:production}",
+            "alias": "Memory %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "value": 0, "color": "green" },
+                { "value": 60, "color": "yellow" },
+                { "value": 80, "color": "orange" },
+                { "value": 95, "color": "red" }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

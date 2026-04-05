@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { analytics } from "@/lib/analytics";
 
 interface LocationState {
     coordinates: { lat: number; lng: number } | null;
@@ -32,6 +33,10 @@ export function useGeolocation() {
                 error: null,
                 loading: false,
             });
+
+            // Emit product KPI event: user granted location access
+            // We intentionally do NOT send raw lat/lng to analytics – only that the event occurred
+            analytics.locationGranted();
         };
 
         const errorHandler = (error: GeolocationPositionError) => {
