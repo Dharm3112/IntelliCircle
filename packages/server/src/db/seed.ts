@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { users, chatRooms } from "@intellicircle/shared/src/schema";
+import { users, chatRooms } from "@intellicircle/shared";
 import { env } from "../config/env";
 
 const seed = async () => {

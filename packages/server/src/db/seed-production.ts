@@ -1,5 +1,5 @@
 import { db } from "./index";
-import { chatRooms } from "@intellicircle/shared/src/schema";
+import { chatRooms } from "@intellicircle/shared";
 import { env } from "../config/env";
 
 /**
