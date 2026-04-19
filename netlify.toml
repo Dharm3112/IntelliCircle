@@ -1,6 +1,11 @@
+# IntelliCircle Client — Netlify Deployment Configuration
+# base tells Netlify where the Next.js app lives in this monorepo.
+# The @netlify/plugin-nextjs then finds .next relative to base.
+
 [build]
-  command = "npm run build:client"
+  base = "packages/client"
+  command = "npm run build"
   publish = ".next"
-  
-# Note: The [[redirects]] section for index.html was removed 
-# because Next.js handles its own routing natively.
+
+# Note: Netlify detects npm workspaces and installs deps from the
+# monorepo root automatically, so shared packages resolve correctly.
