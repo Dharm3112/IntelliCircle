@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { env } from "../config/env";
-import * as schema from "@intellicircle/shared/dist/schema";
+import * as schema from "@intellicircle/shared/src/schema";
 
 // ─── Connection Pool Configuration ───────────────────────────────────────────
 // Right-sized for Supabase/PgBouncer transaction-mode pooling.

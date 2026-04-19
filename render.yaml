@@ -27,8 +27,10 @@ services:
           property: connectionString
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "20.11.1"
       - key: NODE_OPTIONS
-        value: "--max-old-space-size=512"  # Web tier needs headroom for WS connections
+        value: "--max-old-space-size=400"  # Web tier needs headroom for WS connections
       - key: DATADOG_API_KEY
         sync: false  # Set securely in Render Dashboard
       - key: NEXT_PUBLIC_POSTHOG_KEY
@@ -48,7 +50,7 @@ services:
     # - CPU-based scaling catches JSON parse / crypto (JWT) load
 
   # ─── Worker Tier: BullMQ Background Job Processor ──────────────────────────
-  - type: web
+  - type: worker
     name: intellicircle-worker
     runtime: node
     plan: free
@@ -61,8 +63,10 @@ services:
           property: connectionString
       - key: NODE_ENV
         value: production
+      - key: NODE_VERSION
+        value: "20.11.1"
       - key: NODE_OPTIONS
-        value: "--max-old-space-size=512"  # Increased from 256 for sustained BullMQ load
+        value: "--max-old-space-size=400"  # Prevent OOM during free-tier builds
       - key: REDIS_URL
         sync: false  # Upstash Redis URL set in Render Dashboard
       - key: GEMINI_API_KEY
