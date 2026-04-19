@@ -77,7 +77,9 @@ export default function ChatRoomPage() {
     useEffect(() => {
         if (historyData) {
             setRoom(historyData.room);
-            setMessages(historyData.messages || []);
+            // Only set messages if our local state is currently empty 
+            // to prevent overwriting live WebSocket messages
+            setMessages(prev => prev.length === 0 ? (historyData.messages || []) : prev);
         }
     }, [historyData]);
 
@@ -92,17 +94,13 @@ export default function ChatRoomPage() {
         const unsubscribe = subscribe((data: any) => {
             console.log("⬇️ FRONTEND RECEIVED WS:", data);
             if (data.type === "new_message") {
-                // Sync the incoming WS message straight into the TanStack cache
-                queryClient.setQueryData(["roomHistory", id], (old: any) => {
-                    if (!old) return old;
-                    return {
-                        ...old,
-                        messages: [...(old.messages || []), data.payload]
-                    };
+                // Only update local state. Let the background refetch handle cache sync quietly.
+                setMessages(prev => {
+                    // Prevent duplicate messages just in case
+                    const exists = prev.some(msg => msg.id === data.payload.id);
+                    if (exists) return prev;
+                    return [...prev, data.payload];
                 });
-
-                // Also update local state for immediate render
-                setMessages(prev => [...prev, data.payload]);
             } else if (data.type === "user_joined") {
                 // In production, we'd add to the precise participants list based on payload diff
                 // For now, we'll refetch or push
