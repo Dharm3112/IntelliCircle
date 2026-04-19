@@ -4,10 +4,23 @@ import { logger } from "./utils/logger";
 import { summarizeRoomJob } from "./jobs/summarizeRoom";
 import { deadRoomCleanupJob } from "./jobs/deadRoomCleanup";
 import { backgroundJobService } from "./services/queue";
+import { env } from "./config/env";
+import http from "http";
 
 const connection = getBullMQConnection();
 
 logger.info("👷 Starting BullMQ Background Worker Process...");
+
+// Render expects web services to bind to a port, even if they only process background jobs.
+// This dummy HTTP server responds to Render's port scans and health checks.
+const dummyServer = http.createServer((req, res) => {
+    res.writeHead(200);
+    res.end("Worker is running\\n");
+});
+
+dummyServer.listen(env.PORT, "0.0.0.0", () => {
+    logger.info(`🌐 Dummy HTTP server listening on port ${env.PORT} for Render health checks`);
+});
 
 const worker = new Worker(
     "intellicircle-queue",
