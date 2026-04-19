@@ -1,8 +1,6 @@
 [build]
   command = "npm run build:client"
-  publish = "dist/public"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  publish = ".next"
+  
+# Note: The [[redirects]] section for index.html was removed 
+# because Next.js handles its own routing natively.
