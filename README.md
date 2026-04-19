@@ -299,15 +299,28 @@ IntelliCircle/
 
 ## 🛠️ Getting Started Locally
 
-Because IntelliCircle is a strictly defined monorepo, **running `npm run dev` in the root folder will fail**. You must run the Client and Server as separate, concurrent processes.
+We offer two ways to start the project locally: a quick automated script or manual step-by-step execution. 
 
 ### Prerequisites
 1. **Node.js** v20+
-2. **PostgreSQL** instance with PostGIS installed.
-3. **Redis** instance (Local or Upstash Serverless).
+2. **PostgreSQL** instance with PostGIS installed (or Docker Desktop).
+3. **Redis** instance (Local, Docker, or Upstash Serverless).
 4. Environment variables configured properly (See `.env.example` in both `client` and `server` packages).
 
-### Step 1: Start the Backend Layer
+### Method 1: Quick Start (Recommended)
+
+Simply run the provided PowerShell script from the root directory. It will automatically start Docker containers for PostgreSQL and Redis, and then launch both the frontend and backend servers concurrently.
+
+```powershell
+.\start-project.ps1
+```
+*(Alternatively, you can run `docker-compose up -d` and then `npm run dev` manually from the root directory).*
+
+### Method 2: Manual Step-by-Step Startup
+
+If you prefer to start the client and server as separate, concurrent processes:
+
+#### Step 1: Start the Backend Layer
 The Fastify server builds the DB connection pool and spins up the WebSocket server on port `8080`.
 ```bash
 # Terminal 1
@@ -318,7 +331,7 @@ npm run dev         # Starts Fastify on http://localhost:8080
 ```
 > **Note:** To test AI and background jobs, you may also need to start the BullMQ worker in an adjacent terminal using `npm run worker`.
 
-### Step 2: Start the Frontend UI
+#### Step 2: Start the Frontend UI
 The Next.js client runs on port `3000` and proxys to the backend.
 ```bash
 # Terminal 2
