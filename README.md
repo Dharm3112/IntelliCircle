@@ -1,3 +1,4 @@
+
 <div align="center">
   <h1>✨ IntelliCircle ✨</h1>
   <p><strong>The real-time, location-aware watercooler for local professional networking.</strong></p>
