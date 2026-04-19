@@ -44,20 +44,26 @@ const { publisher, subscriber } = getPubSubClients();
 export async function websocketRoutes(app: FastifyInstance) {
     // Redis Subscriber Handler: When a message hits a Redis Channel, pump it out to all local Fastify Sockets subscribed to that room
     subscriber.on("message", (channel, message) => {
+        app.log.info({ channel }, "REDIS SUBSCRIBER RECEIVED MESSAGE");
         const [prefix, roomIdStr] = channel.split(":");
         if (prefix !== "room") return;
 
         const roomId = parseInt(roomIdStr, 10);
+        let matchedCount = 0;
 
         // Find all local sockets currently in this room and broadcast the event
         for (const [socket, clientData] of clients.entries()) {
             if (clientData.activeRooms.has(roomId)) {
+                matchedCount++;
                 // Ensure socket is actually open before sending
-                if (socket.readyState === 1) {
-                    socket.send(message);
+                // Fastify-websocket v11+ wraps the connection, so the raw WS is under .socket
+                const rawSocket = socket.socket || socket;
+                if (rawSocket.readyState === 1) { // 1 = OPEN
+                    rawSocket.send(message);
                 }
             }
         }
+        app.log.info({ matchedClients: matchedCount, roomId }, "BROADCASTING TO LOCAL SOCKETS");
     });
 
     app.get("/", { websocket: true }, (socket, request) => {

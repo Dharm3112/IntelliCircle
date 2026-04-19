@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { db } from "../db/index";
-import { chatRooms, createRoomSchema, nearbyRoomsQuerySchema } from "@intellicircle/shared";
+import { chatRooms, createRoomSchema, nearbyRoomsQuerySchema, users } from "@intellicircle/shared";
 import { reverseGeocode } from "../services/geocoding";
 import { createSuccessResponse, createErrorResponse } from "../utils/response";
 import { sql, eq, desc } from "drizzle-orm";
@@ -144,10 +144,16 @@ export async function roomRoutes(app: FastifyInstance) {
                 return db.select({
                     id: messages.id,
                     userId: messages.userId,
+                    username: users.username, // Join username
                     roomId: messages.roomId,
                     content: messages.content,
                     createdAt: messages.createdAt,
-                }).from(messages).where(eq(messages.roomId, roomId)).orderBy(desc(messages.createdAt)).limit(50);
+                })
+                .from(messages)
+                .leftJoin(users, eq(messages.userId, users.id))
+                .where(eq(messages.roomId, roomId))
+                .orderBy(desc(messages.createdAt))
+                .limit(50);
             }, ["query:room_history_hydration"]);
 
             // Reverse to chronological order for React Feed
