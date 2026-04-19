@@ -12,9 +12,12 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Trigger Render Deploy (Backend & Worker)
+      env:
+        SERVER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_SERVER }}
+        WORKER_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_WORKER }}
       run: |
-        if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_SERVER }}" ]; then curl -X POST -d "" "${{ secrets.RENDER_DEPLOY_HOOK_SERVER }}"; fi
-        if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_WORKER }}" ]; then curl -X POST -d "" "${{ secrets.RENDER_DEPLOY_HOOK_WORKER }}"; fi
+        if [ -n "$SERVER_HOOK" ]; then curl -X POST -d "" "$SERVER_HOOK"; fi
+        if [ -n "$WORKER_HOOK" ]; then curl -X POST -d "" "$WORKER_HOOK"; fi
         
     - name: Wait for API to come online
       run: |
