@@ -17,10 +17,13 @@ const envSchema = z.object({
     PORT: z.coerce.number().default(8080),
     DATABASE_URL: z.string().url("DATABASE_URL must be a valid connection string"),
     REDIS_URL: z.string().url("REDIS_URL must be a valid connection string"),
-    JWT_PRIVATE_KEY: z.string().min(50, "Valid RSA Private Key required"),
-    JWT_PUBLIC_KEY: z.string().min(50, "Valid RSA Public Key required"),
-    OPENCAGE_API_KEY: z.string().optional(), // Used for reverse geocoding Lat/Lng
-    GEMINI_API_KEY: z.string().optional(), // Used for AI chat summaries
+
+    // Transform literal \n into actual newline characters
+    JWT_PRIVATE_KEY: z.string().min(50, "Valid RSA Private Key required").transform(s => s.replace(/\\n/g, '\n')),
+    JWT_PUBLIC_KEY: z.string().min(50, "Valid RSA Public Key required").transform(s => s.replace(/\\n/g, '\n')),
+
+    OPENCAGE_API_KEY: z.string().optional(),
+    GEMINI_API_KEY: z.string().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);
