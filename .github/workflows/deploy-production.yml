@@ -13,8 +13,8 @@ jobs:
     
     - name: Trigger Render Deploy (Backend & Worker)
       run: |
-        curl -X POST -d "" ${{ secrets.RENDER_DEPLOY_HOOK_SERVER }}
-        curl -X POST -d "" ${{ secrets.RENDER_DEPLOY_HOOK_WORKER }}
+        if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_SERVER }}" ]; then curl -X POST -d "" "${{ secrets.RENDER_DEPLOY_HOOK_SERVER }}"; fi
+        if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_WORKER }}" ]; then curl -X POST -d "" "${{ secrets.RENDER_DEPLOY_HOOK_WORKER }}"; fi
         
     - name: Wait for API to come online
       run: |

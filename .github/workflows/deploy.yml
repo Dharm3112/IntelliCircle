@@ -22,4 +22,4 @@ jobs:
     - name: Run Drizzle Migrations
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      run: npm run db:migrate -w @intellicircle/server
+      run: npm run db:push -w @intellicircle/server
