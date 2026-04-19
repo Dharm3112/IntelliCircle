@@ -18,7 +18,7 @@ services:
     runtime: node
     plan: free  # Upgrade to 'starter' for auto-scaling support
     buildCommand: "npm install && npm run build -w @intellicircle/shared && npm run build -w @intellicircle/server"
-    preDeployCommand: "npm run db:push -w @intellicircle/server"
+    preDeployCommand: "npm run db:enable-postgis -w @intellicircle/server && npx tsx packages/server/src/db/run-migrations.ts"
     startCommand: "npm run start -w @intellicircle/server"
     healthCheckPath: /api/health
     envVars:
