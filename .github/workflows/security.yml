@@ -26,7 +26,7 @@ jobs:
         run: npm ci
 
       - name: Run NPM Audit
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical
 
       - name: TruffleHog Secret Scanner
         uses: trufflesecurity/trufflehog@main
