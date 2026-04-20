@@ -64,7 +64,7 @@ export const buildApp = async () => {
     // Build CORS origins from env – supports comma-separated list
     const corsOrigins = env.NODE_ENV === "production"
         ? (env.CORS_ORIGIN
-            ? env.CORS_ORIGIN.split(",").map(o => o.trim())
+            ? env.CORS_ORIGIN.split(",").map(o => o.trim().replace(/\/$/, ''))
             : ["https://intellicircle.netlify.app"])
         : true;
 
