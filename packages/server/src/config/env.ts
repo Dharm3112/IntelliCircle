@@ -24,6 +24,7 @@ const envSchema = z.object({
 
     OPENCAGE_API_KEY: z.string().optional(),
     GEMINI_API_KEY: z.string().optional(),
+    CORS_ORIGIN: z.string().optional(), // Comma-separated list of allowed origins (e.g., "https://app.netlify.app,https://intellicircle.com")
 });
 
 const _env = envSchema.safeParse(process.env);
