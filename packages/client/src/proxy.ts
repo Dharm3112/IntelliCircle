@@ -8,7 +8,7 @@ const protectedPaths = [
     '/settings'
 ]
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
 
     // Check if the current path requires authentication
