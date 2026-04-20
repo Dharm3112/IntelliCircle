@@ -65,7 +65,7 @@ export const buildApp = async () => {
     const corsOrigins = env.NODE_ENV === "production"
         ? (env.CORS_ORIGIN
             ? env.CORS_ORIGIN.split(",").map(o => o.trim().replace(/\/$/, ''))
-            : ["https://intellicircle.netlify.app"])
+            : ["https://intelli-circle-client.vercel.app"])
         : true;
 
     await app.register(cors, {

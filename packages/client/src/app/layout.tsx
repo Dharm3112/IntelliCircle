@@ -15,6 +15,7 @@ import { Header } from "../components/header";
 import { Footer } from "../components/footer";
 import PageTransition from "../components/page-transition";
 import { CSPostHogProvider } from "@/components/posthog-provider";
+import { Analytics } from "@vercel/analytics/next";
 
 export default function RootLayout({
     children,
@@ -33,6 +34,7 @@ export default function RootLayout({
                     </main>
                     <Footer />
                 </Providers>
+                <Analytics />
             </body>
         </html>
     );
