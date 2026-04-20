@@ -62,10 +62,15 @@ export const buildApp = async () => {
     await app.register(helmet);
 
     // Build CORS origins from env – supports comma-separated list
+    const defaultOrigins = [
+        "https://intelli-circle-client.vercel.app",
+        /^https:\/\/intelli-circle-client.*\.vercel\.app$/
+    ];
+
     const corsOrigins = env.NODE_ENV === "production"
         ? (env.CORS_ORIGIN
             ? env.CORS_ORIGIN.split(",").map(o => o.trim().replace(/\/$/, ''))
-            : ["https://intelli-circle-client.vercel.app"])
+            : defaultOrigins)
         : true;
 
     await app.register(cors, {
