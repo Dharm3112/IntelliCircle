@@ -1,0 +1,51 @@
+# Development stage
+FROM node:20-alpine AS development
+
+WORKDIR /app
+
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++
+
+COPY package*.json ./
+COPY packages/client/package*.json ./packages/client/
+COPY packages/shared ./packages/shared
+
+RUN npm ci
+
+COPY packages/client ./packages/client
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev:client"]
+
+# Builder stage (for production)
+FROM development AS builder
+
+COPY . .
+
+RUN npm run build:client
+
+# Production stage
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+RUN apk add --no-cache dumb-init
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+COPY package*.json ./
+COPY packages/client/package*.json ./packages/client/
+
+RUN npm ci --only=production && npm cache clean --force
+
+COPY --from=builder /app/dist/public ./dist/public
+
+RUN chown -R nodejs:nodejs /app
+
+USER nodejs
+
+EXPOSE 3000
+
+ENTRYPOINT ["/usr/sbin/dumb-init", "--"]
+
+CMD ["npx", "serve", "-s", "dist/public", "-l", "3000"]

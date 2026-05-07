@@ -1,0 +1,16 @@
+.git
+.gitignore
+.github
+node_modules
+npm-debug.log
+.DS_Store
+.env
+.env.local
+.vscode
+.idea
+dist
+build
+coverage
+*.md
+.netlify
+.next

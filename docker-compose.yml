@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgis/postgis:15-3.3
@@ -13,10 +11,12 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d intellicircle" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d intellicircle"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - intellicircle
 
   redis:
     image: redis:alpine
@@ -27,11 +27,71 @@ services:
     volumes:
       - redisdata:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - intellicircle
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: intellicircle-server
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:password@db:5432/intellicircle
+      REDIS_URL: redis://redis:6379
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./packages/server/src:/app/packages/server/src
+      - ./packages/shared:/app/packages/shared
+    command: npm run dev:server
+    networks:
+      - intellicircle
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+      target: development
+    container_name: intellicircle-client
+    environment:
+      NODE_ENV: development
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./packages/client/src:/app/packages/client/src
+      - ./packages/client/public:/app/packages/client/public
+    networks:
+      - intellicircle
+    develop:
+      watch:
+        - path: ./packages/client/src
+          action: sync
+          target: /app/packages/client/src
+        - path: ./packages/client/public
+          action: sync
+          target: /app/packages/client/public
 
 volumes:
   pgdata:
   redisdata:
+
+networks:
+  intellicircle:
+    driver: bridge
