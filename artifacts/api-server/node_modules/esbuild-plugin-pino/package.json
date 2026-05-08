@@ -1,0 +1,74 @@
+{
+  "name": "esbuild-plugin-pino",
+  "version": "2.3.3",
+  "description": "An esbuild plugin to generate extra pino files for bundling",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "repository": "https://github.com/davipon/esbuild-plugin-pino",
+  "bugs": "https://github.com/davipon/esbuild-plugin-pino/issues",
+  "keywords": [
+    "pino",
+    "esbuild",
+    "esbuild-plugin",
+    "pino-transport",
+    "bundling"
+  ],
+  "author": "David Peng <davipondev@gmail.com>",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "fix-exports.js"
+  ],
+  "devDependencies": {
+    "@biomejs/biome": "^2.1.4",
+    "@types/node": "24.2.1",
+    "esbuild": "0.25.8",
+    "execa": "9.6.0",
+    "nodemon": "3.1.10",
+    "pino": "9.8.0",
+    "pino-loki": "2.6.0",
+    "pino-pretty": "13.1.1",
+    "pkgroll": "2.15.3",
+    "standard-version": "9.5.0",
+    "thread-stream": "3.1.0",
+    "tsx": "4.20.3",
+    "typescript": "5.9.2",
+    "vitest": "3.2.4"
+  },
+  "peerDependencies": {
+    "esbuild": ">=0.25.0 <=0.25.8",
+    "pino": ">=7.0.0",
+    "pino-pretty": "*",
+    "thread-stream": "*"
+  },
+  "peerDependenciesMeta": {
+    "pino-pretty": {
+      "optional": true
+    },
+    "thread-stream": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "dev": "nodemon",
+    "build": "pkgroll && node fix-exports.js",
+    "buildJS": "pkgroll && node test/buildScripts/buildJS.js",
+    "buildTS": "pkgroll && tsx test/buildScripts/buildTS.ts",
+    "buildTS2": "pkgroll && tsx test/buildScripts/arrayOfObjects.ts",
+    "test": "rm -rf dist && pkgroll && node fix-exports.js && vitest run",
+    "check": "biome check --write .",
+    "release:major": "standard-version --no-verify --release-as major",
+    "release:minor": "standard-version --no-verify --release-as minor",
+    "release:patch": "standard-version --no-verify --release-as patch"
+  }
+}
