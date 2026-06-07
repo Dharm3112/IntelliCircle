@@ -1,0 +1,110 @@
+{
+  "name": "orval",
+  "description": "A swagger client generator for typescript",
+  "version": "8.5.3",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist",
+    "!dist/**/*.d.ts.map",
+    "!dist/**/*.d.mts.map"
+  ],
+  "bin": "./dist/bin/orval.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./bin/orval": "./dist/bin/orval.mjs",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "keywords": [
+    "rest",
+    "client",
+    "swagger",
+    "open-api",
+    "fetch",
+    "data fetching",
+    "code-generation",
+    "angular",
+    "react",
+    "react-query",
+    "svelte",
+    "svelte-query",
+    "vue",
+    "vue-query",
+    "msw",
+    "mock",
+    "axios",
+    "vue-query",
+    "vue",
+    "swr",
+    "zod",
+    "hono"
+  ],
+  "author": {
+    "name": "Victor Bury",
+    "email": "victor@anymaniax.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/orval-labs/orval.git"
+  },
+  "scripts": {
+    "build": "tsdown --config-loader unrun",
+    "dev": "tsdown --config-loader unrun --watch src",
+    "lint": "eslint .",
+    "test": "vitest",
+    "clean": "rimraf .turbo dist",
+    "nuke": "rimraf .turbo dist node_modules"
+  },
+  "dependencies": {
+    "@commander-js/extra-typings": "^14.0.0",
+    "@orval/angular": "8.5.3",
+    "@orval/axios": "8.5.3",
+    "@orval/core": "8.5.3",
+    "@orval/fetch": "8.5.3",
+    "@orval/hono": "8.5.3",
+    "@orval/mcp": "8.5.3",
+    "@orval/mock": "8.5.3",
+    "@orval/query": "8.5.3",
+    "@orval/solid-start": "8.5.3",
+    "@orval/swr": "8.5.3",
+    "@orval/zod": "8.5.3",
+    "@scalar/json-magic": "^0.11.5",
+    "@scalar/openapi-parser": "^0.24.13",
+    "@scalar/openapi-types": "0.5.3",
+    "chokidar": "^5.0.0",
+    "commander": "^14.0.2",
+    "enquirer": "^2.4.1",
+    "execa": "^9.6.1",
+    "find-up": "8.0.0",
+    "fs-extra": "^11.3.2",
+    "jiti": "^2.6.1",
+    "js-yaml": "4.1.1",
+    "remeda": "^2.33.6",
+    "string-argv": "^0.3.2",
+    "tsconfck": "^3.1.6",
+    "typedoc": "^0.28.17",
+    "typedoc-plugin-coverage": "^4.0.2",
+    "typedoc-plugin-markdown": "^4.10.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/js-yaml": "^4.0.9",
+    "eslint": "10.0.2",
+    "rimraf": "6.1.2",
+    "tsdown": "0.20.3",
+    "typescript": "5.9.3",
+    "vitest": "4.0.18"
+  },
+  "peerDependencies": {
+    "prettier": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "prettier": {
+      "optional": true
+    }
+  }
+}

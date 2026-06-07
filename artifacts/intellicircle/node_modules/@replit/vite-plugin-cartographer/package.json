@@ -1,0 +1,50 @@
+{
+  "name": "@replit/vite-plugin-cartographer",
+  "version": "0.5.1",
+  "private": false,
+  "devDependencies": {
+    "@types/babel__core": "^7.20.5",
+    "@types/babel__traverse": "^7.20.6",
+    "@types/node": "^22.5.5",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "happy-dom": "^20.0.2",
+    "tsup": "^8.3.5",
+    "tsx": "^4.9.5",
+    "vite": "^5.4.10",
+    "vitest": "^3.2.4",
+    "@replit/tsconfig": "0.0.0"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@babel/parser": "^7.26.9",
+    "@babel/traverse": "^7.26.9",
+    "@babel/types": "^7.26.9",
+    "magic-string": "^0.30.12",
+    "modern-screenshot": "^4.6.0"
+  },
+  "//": "This is the correct way to set up a package with a `src/index.ts` root file that supports both ESM and CJS modules.",
+  "///": "https://johnnyreilly.com/dual-publishing-esm-cjs-modules-with-tsup-and-are-the-types-wrong",
+  "type": "module",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "require": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint src",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "vitest"
+  }
+}
