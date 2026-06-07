@@ -2,36 +2,58 @@
 
 ## Supported Versions
 
-Currently, only the latest version of IntelliCircle is supported with security updates. 
+IntelliCircle is actively developed. Security fixes are applied to the latest version on the `main` branch.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.0.x   | :white_check_mark: |
-| < 1.0   | :x:                |
+| latest (`main`) | :white_check_mark: |
+| older commits   | :x:                |
 
 ## Reporting a Vulnerability
 
-We take the security of IntelliCircle very seriously. If you discover a security vulnerability within this project, please **do not open a public issue**. 
+We take the security of IntelliCircle very seriously. If you discover a vulnerability in this project, please **do not** open a public GitHub issue.
 
-Instead, please send an email to the project maintainers directly or report it privately through GitHub's vulnerability reporting feature.
+### How to Report
 
-Please include the following information in your report:
-* A description of the vulnerability.
-* Steps to reproduce the issue.
-* Potential impact of the vulnerability.
-* Any other relevant information or proof of concept (e.g., specific to Fastify, Next.js, or WebSockets).
+Please report vulnerabilities by opening a private GitHub Security Advisory or contacting the repository owner:
 
-We will endeavor to respond to your report within 48 hours and will keep you informed of our progress in resolving the issue. We will also coordinate with you on the timeline for public disclosure.
+1. Navigate to the repository page on GitHub.
+2. Go to the **Security** tab.
+3. Click **"Report a vulnerability"** under the Security Advisories section.
+4. Fill in the details of the issue.
 
-## Security Architecture & Practices
+### What to Include
 
-IntelliCircle employs several built-in security measures across its decoupled Client-Server architecture:
+Please include as much of the following information as possible to help us understand, reproduce, and resolve the issue quickly:
 
-* **Authentication**: Enterprise-grade, fully asymmetric JWT authentication (RS256).
-* **Data Validation**: Universal payload validation using [Zod](https://zod.dev/) across the entire stack. This strict typing ensures DB schemas, WebSocket payloads, and REST APIs are resistant to injection and malformed data attacks.
-* **Rate Limiting & DDoS Prevention**: Strict rate limiting implemented at the infrastructure layer, backed by Redis.
-* **CSRF Protection**: Configured by default across state-changing HTTP endpoints.
-* **Data Privacy**: Hyper-local tracking and discovery are managed securely via PostgreSQL and PostGIS, ensuring location data is strictly processed based on proximity rules.
+- A description of the vulnerability and its potential impact
+- Detailed steps to reproduce the issue (including example HTTP payloads or WebSocket frame content if applicable)
+- Any proof-of-concept (PoC) code or exploit examples
+- Affected component(s) (e.g., Fastify websocket handler, Next.js client middleware, JWT validation flow, or shared Zod schemas)
 
-### Contributing Secure Code
-When contributing to IntelliCircle, please ensure your changes respect the `shared` boundaries. All new input vectors (REST routes, WS channels, database queries) **must** be validated against updated Zod schemas in `packages/shared/src/schema.ts` before being processed by the Next.js client or Fastify server.
+## Sensitive Areas
+
+IntelliCircle manages real-time, location-aware environments. Please pay special attention to the following sensitive components during security audits or updates:
+
+- **JWT Asymmetric Keys (`JWT_PRIVATE_KEY` / `JWT_PUBLIC_KEY`)** — used by Fastify (`@fastify/jwt`) to sign and verify session tokens (RS256). Keeping the private key secure is paramount.
+- **Geospatial Location Data (Postgres + PostGIS)** — location coordinates are used to fetch nearby rooms. Ensure location-query APIs (such as `ST_DWithin` functions) do not accidentally leak precise user coordinate histories.
+- **WebSocket Broadcast Handlers (`packages/server/src/websocket/`)** — handles real-time connections and Redis Pub/Sub events. Ensure validation checks exist to prevent message spoofing, room hijacking, or unauthorized broadcasting.
+- **API Routes and Middlewares (`packages/server/src/routes/` & `packages/client/src/middleware.ts`)** — verifies cookie authentication and limits unauthorized access. Always check CSRF protection and rate limits here.
+- **Integration Secrets (`GEMINI_API_KEY`, `OPENCAGE_API_KEY`)** — controls connection with Google Gemini Flash AI (for BullMQ room summarization jobs) and OpenCage (for geocoding). Protection against secret exposure is crucial to prevent API abuse.
+- **Zod Data Schemas (`packages/shared/src/schema.ts`)** — defines validation boundaries across client and server. Make sure schemas do not permit prototype pollution, SQL/spatial injection, or HTML script injection (XSS).
+
+## Response Timeline
+
+- **Acknowledgement:** Within 48 to 72 hours of receiving a report.
+- **Status update:** Within 7 days.
+- **Fix or mitigation:** Timeline depends on severity; critical issues affecting user data or server operations will be prioritized.
+
+## Disclosure Policy
+
+We follow a **coordinated disclosure** model. Once a patch or mitigation is ready, we will:
+
+1. Publish a GitHub Security Advisory.
+2. Credit the reporter (unless you prefer to remain anonymous).
+3. Release the patched code version to the `main` branch.
+
+Thank you for helping keep IntelliCircle and its users safe!
