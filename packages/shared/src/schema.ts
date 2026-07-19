@@ -96,7 +96,7 @@ export const participants = pgTable(
 
 // Waitlist Schemas
 export const insertWaitlistSchema = z.object({
-    email: z.string().email(),
+    email: z.string().email().trim().toLowerCase(),
     name: z.string().optional(),
     profession: z.string().optional()
 });
@@ -113,7 +113,7 @@ export const anonymousAuthSchema = z.object({
 });
 
 export const upgradeAuthSchema = z.object({
-    email: z.string().email(),
+    email: z.string().email().trim().toLowerCase(),
     password: z.string()
         .min(8, "Password must be at least 8 characters long")
         .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
