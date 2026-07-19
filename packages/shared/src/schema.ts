@@ -8,6 +8,7 @@ import {
     integer,
     uniqueIndex,
     index,
+    doublePrecision,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
