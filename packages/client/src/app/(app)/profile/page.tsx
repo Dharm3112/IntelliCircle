@@ -37,7 +37,29 @@ export default function ProfilePage() {
         }
     }, [mounted, isAuthenticated, router, user]);
 
-    if (!mounted || !user) return null;
+    if (!mounted || !user) {
+        return (
+            <div className="flex-grow flex flex-col w-full animate-pulse">
+                <div className="w-full bg-[#111827] border-b border-[#27272a] relative">
+                    <div className="h-48 w-full bg-[#1a2235]"></div>
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative pb-8">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end -mt-16 sm:-mt-20 sm:mb-6 mb-4 gap-4">
+                            <div className="w-32 h-32 rounded-full border-4 border-background bg-zinc-800 shadow-xl"></div>
+                            <div className="h-10 w-32 bg-white/5 rounded-full border border-white/10"></div>
+                        </div>
+                        <div className="max-w-3xl">
+                            <div className="h-10 w-48 bg-white/5 rounded-md mb-2"></div>
+                            <div className="flex flex-wrap items-center gap-4 mb-4">
+                                <div className="h-4 w-24 bg-white/5 rounded-md"></div>
+                                <div className="h-4 w-32 bg-white/5 rounded-md"></div>
+                            </div>
+                            <div className="h-20 w-full bg-white/5 rounded-md border-l-2 border-primary/20"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
