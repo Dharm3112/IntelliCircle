@@ -96,7 +96,7 @@ export const participants = pgTable(
 
 // Waitlist Schemas
 export const insertWaitlistSchema = z.object({
-    email: z.string().email(),
+    email: z.string().email().trim().toLowerCase(),
     name: z.string().optional(),
     profession: z.string().optional()
 });
@@ -113,7 +113,7 @@ export const anonymousAuthSchema = z.object({
 });
 
 export const upgradeAuthSchema = z.object({
-    email: z.string().email(),
+    email: z.string().email().trim().toLowerCase(),
     password: z.string()
         .min(8, "Password must be at least 8 characters long")
         .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
@@ -152,4 +152,11 @@ export const nearbyRoomsQuerySchema = z.object({
     radiusKm: z.coerce.number().min(1).max(5000).default(50), // Default 50km radius
     interests: z.union([z.string(), z.array(z.string())]).optional()
         .transform(val => Array.isArray(val) ? val : (val ? [val] : []))
+});
+
+// --- WebSocket Schemas ---
+export const userJoinedPayloadSchema = z.object({
+    userId: z.number(),
+    roomId: z.number(),
+    timestamp: z.date().default(() => new Date()),
 });
