@@ -12,6 +12,7 @@ import { dbTestRoutes } from "./routes/test-db";
 import { authRoutes } from "./routes/auth";
 import { roomRoutes } from "./routes/rooms";
 import { waitlistRoutes } from "./routes/waitlist";
+import { userRoutes } from "./routes/users";
 import { websocketRoutes } from "./websocket/wsHandler";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
@@ -155,6 +156,7 @@ export const buildApp = async () => {
     app.register(authRoutes, { prefix: "/api/auth" });
     app.register(roomRoutes, { prefix: "/api/rooms" });
     app.register(waitlistRoutes, { prefix: "/api/waitlist" });
+    app.register(userRoutes, { prefix: "/api/users" });
     app.register(websocketRoutes, { prefix: "/ws" });
 
     // --- Observability: Per-Route HTTP Latency Tracking ---
