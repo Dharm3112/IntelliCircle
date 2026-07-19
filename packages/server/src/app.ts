@@ -12,6 +12,13 @@ import { dbTestRoutes } from "./routes/test-db";
 import { authRoutes } from "./routes/auth";
 import { roomRoutes } from "./routes/rooms";
 import { waitlistRoutes } from "./routes/waitlist";
+import { userRoutes } from "./routes/users";
+import { groupRoutes } from "./routes/groups";
+import { messageRoutes } from "./routes/messages";
+import { locationRoutes } from "./routes/locations";
+import { circleRoutes } from "./routes/circles";
+import { postRoutes } from "./routes/posts";
+import { eventRoutes } from "./routes/events";
 import { websocketRoutes } from "./websocket/wsHandler";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
@@ -152,9 +159,17 @@ export const buildApp = async () => {
     // --- Routes ---
     app.register(healthRoutes, { prefix: "/api" });
     app.register(dbTestRoutes, { prefix: "/api" });
-    app.register(authRoutes, { prefix: "/api/auth" });
+    app.register(authRoutes, { prefix: "/api/v1/auth" });
+    app.register(groupRoutes, { prefix: "/api/v1/groups" });
+    app.register(messageRoutes, { prefix: "/api/v1/messages" });
+    app.register(locationRoutes, { prefix: "/api/v1/locations" });
+    app.register(userRoutes, { prefix: "/api/v1/users" });
+    app.register(circleRoutes, { prefix: "/api/v1/circles" });
+    app.register(postRoutes, { prefix: "/api/v1/posts" });
+    app.register(eventRoutes, { prefix: "/api/v1/events" });
     app.register(roomRoutes, { prefix: "/api/rooms" });
     app.register(waitlistRoutes, { prefix: "/api/waitlist" });
+    app.register(userRoutes, { prefix: "/api/users" });
     app.register(websocketRoutes, { prefix: "/ws" });
 
     // --- Observability: Per-Route HTTP Latency Tracking ---

@@ -8,6 +8,7 @@ import {
     integer,
     uniqueIndex,
     index,
+    doublePrecision,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -94,6 +95,20 @@ export const participants = pgTable(
     }
 );
 
+// --- WebSocket Schemas ---
+export const userJoinedPayloadSchema = z.object({
+    userId: z.number(),
+    roomId: z.number(),
+    timestamp: z.date().default(() => new Date()),
+});
+
+// --- Location Schemas ---
+export const locationCreationPayloadSchema = z.object({
+    label: z.string().min(1).max(100, "Label must be less than 100 characters"),
+    lat: z.number().min(-90).max(90, "Latitude must be between -90 and 90"),
+    lng: z.number().min(-180).max(180, "Longitude must be between -180 and 180"),
+});
+
 // Waitlist Schemas
 export const insertWaitlistSchema = z.object({
     email: z.string().email(),
@@ -152,4 +167,30 @@ export const nearbyRoomsQuerySchema = z.object({
     radiusKm: z.coerce.number().min(1).max(5000).default(50), // Default 50km radius
     interests: z.union([z.string(), z.array(z.string())]).optional()
         .transform(val => Array.isArray(val) ? val : (val ? [val] : []))
+});
+
+
+export const circles = pgTable("circles", {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 256 }).notNull(),
+    description: text("description"),
+    creatorId: integer("creator_id").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+export const posts = pgTable("posts", {
+    id: serial("id").primaryKey(),
+    content: text("content").notNull(),
+    authorId: integer("author_id").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const events = pgTable("events", {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 256 }).notNull(),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    date: timestamp("date").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
 });
