@@ -167,3 +167,29 @@ export const nearbyRoomsQuerySchema = z.object({
     interests: z.union([z.string(), z.array(z.string())]).optional()
         .transform(val => Array.isArray(val) ? val : (val ? [val] : []))
 });
+
+
+export const circles = pgTable("circles", {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 256 }).notNull(),
+    description: text("description"),
+    creatorId: integer("creator_id").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
+});
+
+export const posts = pgTable("posts", {
+    id: serial("id").primaryKey(),
+    content: text("content").notNull(),
+    authorId: integer("author_id").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const events = pgTable("events", {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 256 }).notNull(),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    date: timestamp("date").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+});
