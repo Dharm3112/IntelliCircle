@@ -153,3 +153,10 @@ export const nearbyRoomsQuerySchema = z.object({
     interests: z.union([z.string(), z.array(z.string())]).optional()
         .transform(val => Array.isArray(val) ? val : (val ? [val] : []))
 });
+
+// --- WebSocket Schemas ---
+export const userJoinedPayloadSchema = z.object({
+    userId: z.number(),
+    roomId: z.number(),
+    timestamp: z.date().default(() => new Date()),
+});
