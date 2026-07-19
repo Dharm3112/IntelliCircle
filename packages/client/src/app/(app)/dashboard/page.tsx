@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Link from "next/link";
 import { Compass, MessageSquare, Users, Activity, ChevronRight, Zap, Target } from "lucide-react";
+import DashboardLoading from "./loading";
 
 export default function Dashboard() {
     const { isAuthenticated, user } = useAuthStore();
@@ -17,14 +18,7 @@ export default function Dashboard() {
     }, [isAuthenticated, router]);
 
     if (!isAuthenticated || !user) {
-        return (
-            <div className="flex-1 flex items-center justify-center p-8">
-                <div className="animate-pulse flex flex-col items-center">
-                    <div className="w-12 h-12 bg-white/10 rounded-full mb-4"></div>
-                    <div className="h-4 w-32 bg-white/10 rounded"></div>
-                </div>
-            </div>
-        );
+        return <DashboardLoading />;
     }
 
     return (

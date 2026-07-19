@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { Loader2, MapPin, Compass, AlertCircle, PlusCircle } from "lucide-react";
 import { CreateRoomModal } from "@/components/CreateRoomModal";
 import { usePostHog } from 'posthog-js/react';
+import DiscoverLoading from "./loading";
 
 interface Room {
     id: number;
@@ -85,7 +86,7 @@ export default function DiscoverPage() {
         }
     }, [coordinates, geoLoading, geoError, searchRadius]);
 
-    if (!isAuthenticated) return null; // Gate render until redirect loop catches
+    if (!isAuthenticated) return <DiscoverLoading />; // Gate render until redirect loop catches
 
     return (
         <div className="min-h-screen bg-black text-white relative">
