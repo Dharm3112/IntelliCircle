@@ -94,6 +94,20 @@ export const participants = pgTable(
     }
 );
 
+// --- WebSocket Schemas ---
+export const userJoinedPayloadSchema = z.object({
+    userId: z.number(),
+    roomId: z.number(),
+    timestamp: z.date().default(() => new Date()),
+});
+
+// --- Location Schemas ---
+export const locationCreationPayloadSchema = z.object({
+    label: z.string().min(1).max(100, "Label must be less than 100 characters"),
+    lat: z.number().min(-90).max(90, "Latitude must be between -90 and 90"),
+    lng: z.number().min(-180).max(180, "Longitude must be between -180 and 180"),
+});
+
 // Waitlist Schemas
 export const insertWaitlistSchema = z.object({
     email: z.string().email(),
