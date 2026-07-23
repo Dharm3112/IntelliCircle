@@ -1,10 +1,10 @@
 {
   "version": 2,
+  "root": "packages/client",
   "builds": [
     {
-      "src": "packages/client/package.json",
-      "use": "@vercel/next.js",
-      "config": { "distDir": ".next" }
+      "src": "package.json",
+      "use": "@vercel/next.js"
     }
   ]
 }
