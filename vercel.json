@@ -1,9 +1,12 @@
 {
   "version": 2,
+  "projectSettings": {
+    "rootDirectory": "packages/client"
+  },
   "builds": [
     {
-      "src": "packages/client/package.json",
-      "use": "@vercel/next",
+      "src": "package.json",
+      "use": "@vercel/next.js",
       "config": { "distDir": ".next" }
     }
   ]
