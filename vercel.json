@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "root": "packages/client",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next.js"
+    }
+  ]
+}
