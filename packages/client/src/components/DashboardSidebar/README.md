@@ -7,7 +7,7 @@ The `DashboardSidebar` component is a navigation sidebar designed for the dashbo
 ## Location
 
 This component is located at:
-`packages/client/components/DashboardSidebar/`
+`packages/client/src/components/DashboardSidebar/`
 
 ## Usage
 
