@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { db } from "../db/index";
-import { users } from "@intellicircle/shared";
 import {
+    users,
     anonymousAuthSchema,
     upgradeAuthSchema,
     loginAuthSchema,
@@ -25,20 +25,19 @@ export async function authRoutes(app: FastifyInstance) {
         // Check if username already exists
         const existingUsers = await db.select().from(users).where(eq(users.username, username)).limit(1);
 
-        let user;
+        let user: any; // Fix: Explicitly declare type to prevent TS implicit 'any' error
+        
         if (existingUsers.length > 0) {
-            user = existingUsers[0];
-            // If the user has an email, they are no longer anonymous. They must use standard login.
-            if (user.email) {
-                // Audit Log
-                await db.insert(authAuditLogs).values({
-                    ipAddress: request.ip,
-                    eventType: "signup_failed",
-                    usernameOrEmailAttempted: username,
-                    userAgent: request.headers['user-agent'] || null
-                });
-                return reply.status(403).send(createErrorResponse("Username is already claimed by a registered account. Please login.", "ACCOUNT_CLAIMED"));
-            }
+            // Audit Log for attempted collision/takeover
+            await db.insert(authAuditLogs).values({
+                ipAddress: request.ip,
+                eventType: "signup_failed",
+                usernameOrEmailAttempted: username,
+                userAgent: request.headers['user-agent'] || null
+            });
+            
+            // Return 409 Conflict: Prevents takeover of anonymous OR registered accounts
+            return reply.status(409).send(createErrorResponse("Username is already taken.", "CONFLICT"));
         } else {
             // Create new anonymous user
             const [newUser] = await db.insert(users).values({
@@ -182,8 +181,7 @@ export async function authRoutes(app: FastifyInstance) {
             await blacklistToken(decoded.jti, 7 * 24 * 60 * 60 * 1000);
 
             // Issue New Tokens
-            // Note: Utilizing `crypto.randomUUID()` for unique `jti` to ensure unique keys in Redis
-            const crypto = require('crypto');
+            // Fix: Removed 'const crypto = require("crypto");' redeclaration error here
             const newJti = crypto.randomUUID();
 
             const accessToken = app.jwt.sign({ id: user.id, username: user.username, role: user.role }, { expiresIn: "15m" });
