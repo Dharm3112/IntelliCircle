@@ -3,7 +3,7 @@ import { db } from "../db/index";
 import { chatRooms, createRoomSchema, nearbyRoomsQuerySchema, users } from "@intellicircle/shared";
 import { reverseGeocode } from "../services/geocoding";
 import { createSuccessResponse, createErrorResponse } from "../utils/response";
-import { sql, eq, desc } from "drizzle-orm";
+import { sql, eq, desc, and, lt } from "drizzle-orm";
 import { messages } from "@intellicircle/shared";
 import { trackTiming } from "../utils/metrics";
 
@@ -29,7 +29,7 @@ export async function roomRoutes(app: FastifyInstance) {
                 name,
                 description,
                 interests,
-                location: { x: lng, y: lat } as any,
+                location: locationPoint, // <-- FIXED: Was incorrectly bypassing locationPoint
                 // We're dynamically adding a region string column next migration to hold OpenCage result. 
                 // Currently just making sure the spatial bounds store.
             }).returning();
@@ -128,6 +128,11 @@ export async function roomRoutes(app: FastifyInstance) {
         const roomId = parseInt(_id, 10);
         if (isNaN(roomId)) return reply.status(400).send(createErrorResponse("Invalid Room ID"));
 
+        // FIXED: Extract optional cursor (message ID) for pagination
+        const query = request.query as { cursor?: string };
+        const cursor = query.cursor ? parseInt(query.cursor, 10) : undefined;
+        const PAGE_LIMIT = 50;
+
         try {
             // Fetch Room Details
             const [roomDef] = await db.select({
@@ -139,7 +144,12 @@ export async function roomRoutes(app: FastifyInstance) {
 
             if (!roomDef) return reply.status(404).send(createErrorResponse("Room not found"));
 
-            // Fetch Top 50 latest messages, tracked via Datadog StatsD
+            // FIXED: Dynamic condition to fetch messages older than the cursor if provided
+            const historyCondition = cursor 
+                ? and(eq(messages.roomId, roomId), lt(messages.id, cursor))
+                : eq(messages.roomId, roomId);
+
+            // Fetch Top latest messages, tracked via Datadog StatsD
             const history = await trackTiming("db_query_time", async () => {
                 return db.select({
                     id: messages.id,
@@ -151,15 +161,19 @@ export async function roomRoutes(app: FastifyInstance) {
                 })
                 .from(messages)
                 .leftJoin(users, eq(messages.userId, users.id))
-                .where(eq(messages.roomId, roomId))
+                .where(historyCondition)
                 .orderBy(desc(messages.createdAt))
-                .limit(50);
+                .limit(PAGE_LIMIT);
             }, ["query:room_history_hydration"]);
+
+            // FIXED: Determine the next cursor (the ID of the oldest message in this batch)
+            const nextCursor = history.length === PAGE_LIMIT ? history[history.length - 1].id : null;
 
             // Reverse to chronological order for React Feed
             return reply.send(createSuccessResponse({
                 room: roomDef,
-                messages: history.reverse()
+                messages: history.reverse(),
+                nextCursor // Send cursor to frontend
             }));
         } catch (error) {
             app.log.error(error);
